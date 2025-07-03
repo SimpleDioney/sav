@@ -1,10 +1,10 @@
 # app.py
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import sqlite3
-import os
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import init_app, get_db, close_db, DATABASE
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'sua_chave_secreta_aqui_E_MUITO_LONGA_E_RANDOMICA_PARA_PRODUCAO' # MUDE ISSO!
@@ -297,7 +297,8 @@ def contas_a_pagar_dashboard():
         form_data = (request.form['pagamento_data_inicio'], request.form['pagamento_data_fim'], request.form['caixa'], store_id)
         db.execute("INSERT INTO contas_a_pagar_pagamentos (pagamento_data_inicio, pagamento_data_fim, caixa, store_id) VALUES (?, ?, ?, ?)", form_data)
         db.commit()
-        flash('Pagamento adicionado com sucesso!', 'success')
+        flash('Pagamento adicionado com sucesso!', 'success'
+              )
         return redirect(url_for('contas_a_pagar_dashboard'))
 
     stores = []
@@ -306,6 +307,18 @@ def contas_a_pagar_dashboard():
         stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall()
     else:
         pagamentos = db.execute("SELECT p.*, s.name as store_name FROM contas_a_pagar_pagamentos p LEFT JOIN stores s ON p.store_id = s.id WHERE p.store_id = ? ORDER BY p.pagamento_data_inicio DESC", (session.get('store_id'),)).fetchall()
+
+    pagamentos = [dict(row) for row in pagamentos]
+
+    for item in pagamentos:
+        try:
+            print("INICIO:", item['pagamento_data_inicio'])
+            print("FIM:", item['pagamento_data_fim'])
+            item['pagamento_data_inicio'] = datetime.strptime(item['pagamento_data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
+            item['pagamento_data_fim'] = datetime.strptime(item['pagamento_data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
+        except Exception as e:
+            print("Erro ao formatar data:", e)
+
 
     return render_template('contas_a_pagar/contas_a_pagar_dashboard.html', pagamentos=pagamentos, stores=stores)
 
@@ -490,4 +503,4 @@ def cobranca_fichas_acerto_delete(item_id):
     return redirect(url_for('cobranca_dashboard'))
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True)
