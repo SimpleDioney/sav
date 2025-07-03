@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Patrimônio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Painel Patrimônio</h1>
+        <div class="admin-nav">
+            {% if session.role == 'super_admin' %}
+                <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+            {% endif %}
+            <a href="{{ url_for('admin_logout') }}">Sair</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Adicionar Novo Patrimônio</h2>
+        <form action="{{ url_for('patrimonio_dashboard') }}" method="POST">
+            <label for="codigo_cliente">Código do Cliente:</label>
+            <input type="text" id="codigo_cliente" name="codigo_cliente" required>
+            
+            <label for="nome_cliente">Nome do Cliente:</label>
+            <input type="text" id="nome_cliente" name="nome_cliente" required>
+            
+            <label for="patrimonios">Patrimônios (separados por / ):</label>
+            <textarea id="patrimonios" name="patrimonios" rows="3" placeholder="Ex: Monitor DELL/Teclado Mecânico/Mouse Logitech" required></textarea>
+            
+            <label for="numero_caixa">Número da Caixa:</label>
+            <input type="text" id="numero_caixa" name="numero_caixa" required>
+            
+            <button type="submit">Adicionar Patrimônio</button>
+        </form>
+
+        <h2>Patrimônios Existentes</h2>
+        {% if patrimonios %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Código Cliente</th>
+                        <th>Nome Cliente</th>
+                        <th>Patrimônios</th>
+                        <th>Número da Caixa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in patrimonios %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.codigo_cliente }}</td>
+                            <td>{{ item.nome_cliente }}</td>
+                            <td>{{ item.patrimonios }}</td>
+                            <td>{{ item.numero_caixa }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('patrimonio_edit', item_id=item.id) }}" class="edit">Editar</a>
+                                <form action="{{ url_for('patrimonio_delete', item_id=item.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir este item?');">Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhum patrimônio cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

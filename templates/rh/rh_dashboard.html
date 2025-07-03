@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel RH</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Painel RH</h1>
+        <div class="admin-nav">
+            {% if session.role == 'super_admin' %}
+                <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+            {% endif %}
+            <a href="{{ url_for('admin_logout') }}">Sair</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <p>Bem-vindo ao Painel do Departamento de RH. As funcionalidades de adição e visualização de arquivos serão implementadas aqui.</p>
+        
+        {# Formulário e tabela para dados de RH virão aqui #}
+
+        <p style="text-align: center; margin-top: 20px;"><a href="{{ url_for('admin_login') }}">Voltar para Login</a></p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuários - Super Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Gerenciar Usuários</h1>
+        <div class="admin-nav">
+            <a href="{{ url_for('admin_logout') }}">Sair</a>
+            <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Criar Novo Usuário</h2>
+        <form action="{{ url_for('user_management') }}" method="POST">
+            <label for="username">Usuário:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="password">Senha:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <label for="role">Departamento/Função:</label>
+            <select id="role" name="role" required>
+                <option value="super_admin">Super Admin</option>
+                <option value="admin_rh">Admin RH</option>
+                <option value="admin_patrimonio">Admin Patrimônio</option>
+                <option value="admin_contas_a_pagar">Admin Contas a Pagar</option>
+                <option value="admin_cobranca">Admin Cobrança</option>
+            </select>
+
+            <label for="can_add_users">
+                <input type="checkbox" id="can_add_users" name="can_add_users">
+                Permitir criar novos usuários neste departamento
+            </label>
+            
+            <button type="submit">Criar Usuário</button>
+        </form>
+
+        <h2>Usuários Existentes</h2>
+        {% if users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuário</th>
+                        <th>Departamento/Função</th>
+                        <th>Pode Criar Usuários?</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.role | replace('_', ' ') | title }}</td> {# Formata o nome da função #}
+                            <td>{{ 'Sim' if user.can_add_users else 'Não' }}</td>
+                            <td class="actions">
+                                {# Futuramente: Botão de editar usuário #}
+                                <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir o usuário {{ user.username }}?');">Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhum usuário cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Contas a Pagar - Pagamentos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Painel Contas a Pagar - Pagamentos</h1>
+        <div class="admin-nav">
+            {% if session.role == 'super_admin' %}
+                <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+            {% endif %}
+            <a href="{{ url_for('documentos_diversos_dashboard') }}">Documentos Diversos</a>
+            <a href="{{ url_for('admin_logout') }}">Sair</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Adicionar Pagamento</h2>
+        <form action="{{ url_for('contas_a_pagar_dashboard') }}" method="POST">
+            <label for="pagamento_data_inicio">Data Início (X):</label>
+            <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" required>
+            
+            <label for="pagamento_data_fim">Data Fim (Y):</label>
+            <input type="date" id="pagamento_data_fim" name="pagamento_data_fim" required>
+            
+            <label for="caixa">Caixa:</label>
+            <input type="text" id="caixa" name="caixa" required>
+            
+            <button type="submit">Adicionar Pagamento</button>
+        </form>
+
+        <h2>Pagamentos Existentes</h2>
+        {% if pagamentos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data Início</th>
+                        <th>Data Fim</th>
+                        <th>Caixa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in pagamentos %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.pagamento_data_inicio }}</td>
+                            <td>{{ item.pagamento_data_fim }}</td>
+                            <td>{{ item.caixa }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('contas_a_pagar_pagamentos_edit', item_id=item.id) }}" class="edit">Editar</a>
+                                <form action="{{ url_for('contas_a_pagar_pagamentos_delete', item_id=item.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir este pagamento?');">Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhum pagamento cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

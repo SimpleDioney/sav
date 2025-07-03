@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisar Patrimônios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Pesquisar Patrimônios</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('search') }}" method="GET">
+            <label for="query">Termo de Pesquisa:</label>
+            <input type="text" id="query" name="query" placeholder="Digite o código, nome, patrimônio ou número do cliente (para Cobrança)" required>
+            
+            <label for="search_by">Pesquisar por:</label>
+            <select id="search_by" name="search_by">
+                <option value="codigo_cliente">Código do Cliente (Patrimônio)</option>
+                <option value="nome_cliente">Nome do Cliente (Patrimônio)</option>
+                <option value="patrimonio_especifico">Patrimônio Específico</option>
+                <option value="caixa_cobranca_range">Caixa Cobrança (Range Cliente)</option> {# NOVA OPÇÃO #}
+            </select>
+            
+            <button type="submit">Pesquisar</button>
+        </form>
+
+        <p style="text-align: center;">Acesso administrativo: <a href="{{ url_for('admin_login') }}">Login Admin</a></p>
+    </div>
+</body>
+</html>

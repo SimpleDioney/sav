@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Contas a Pagar - Documentos Diversos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Painel Contas a Pagar - Documentos Diversos</h1>
+        <div class="admin-nav">
+            {% if session.role == 'super_admin' %}
+                <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+            {% endif %}
+            <a href="{{ url_for('contas_a_pagar_dashboard') }}">Pagamentos</a>
+            <a href="{{ url_for('admin_logout') }}">Sair</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Adicionar Documento Diverso</h2>
+        <form action="{{ url_for('documentos_diversos_dashboard') }}" method="POST">
+            <label for="numero_caixa">Número da Caixa:</label>
+            <input type="text" id="numero_caixa" name="numero_caixa" required>
+            
+            <button type="submit">Adicionar Documento</button>
+        </form>
+
+        <h2>Documentos Diversos Existentes</h2>
+        {% if documentos_diversos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Número da Caixa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in documentos_diversos %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.numero_caixa }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('contas_a_pagar_diversos_edit', item_id=item.id) }}" class="edit">Editar</a>
+                                <form action="{{ url_for('contas_a_pagar_diversos_delete', item_id=item.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir este documento?');">Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhum documento diverso cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

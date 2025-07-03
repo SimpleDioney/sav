@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Super Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Super Admin</h1>
+        <div class="admin-nav">
+            <a href="{{ url_for('user_management') }}">Gerenciar Usuários</a>
+            <a href="{{ url_for('admin_logout') }}">Sair</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <p>Bem-vindo, Super Admin! Use o menu acima para gerenciar o sistema.</p>
+        
+        <h2>Acessar Dashboards por Departamento:</h2>
+        <ul>
+            <li><a href="{{ url_for('patrimonio_dashboard') }}">Patrimônio</a></li>
+            <li><a href="{{ url_for('rh_dashboard') }}">RH</a></li>
+            <li><a href="{{ url_for('contas_a_pagar_dashboard') }}">Contas a Pagar (Pagamentos)</a></li>
+            <li><a href="{{ url_for('documentos_diversos_dashboard') }}">Contas a Pagar (Documentos Diversos)</a></li>
+            <li><a href="{{ url_for('cobranca_dashboard') }}">Cobrança</a></li>
+        </ul>
+    </div>
+</body>
+</html>
