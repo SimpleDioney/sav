@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Super Admin</title>
+    <title>ARQUIVOS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard Super Admin</h1>
+        <h1>ARQUIVOS</h1>
         <div class="admin-nav">
             <a href="{{ url_for('user_management') }}">Gerenciar Usuários</a>
             <a href="{{ url_for('manage_stores') }}">Gerenciar Lojas</a>
@@ -25,9 +25,9 @@
             {% endif %}
         {% endwith %}
 
-        <p>Bem-vindo, Super Admin! Use o menu acima para gerenciar o sistema.</p>
+        <p>Bem-vindo! Use o menu acima para gerenciar o sistema.</p>
         
-        <h2>Acessar Dashboards por Departamento:</h2>
+        <h2>Acessar Arquivos por Departamento:</h2>
         <ul>
             <li><a href="{{ url_for('patrimonio_dashboard') }}">Patrimônio</a></li>
             <li><a href="{{ url_for('rh_dashboard') }}">RH</a></li>
