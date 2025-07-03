@@ -5,6 +5,7 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import init_app, get_db, close_db, DATABASE
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 app.secret_key = 'sua_chave_secreta_aqui_E_MUITO_LONGA_E_RANDOMICA_PARA_PRODUCAO' # MUDE ISSO!
@@ -503,4 +504,4 @@ def cobranca_fichas_acerto_delete(item_id):
     return redirect(url_for('cobranca_dashboard'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
