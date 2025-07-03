@@ -14,6 +14,9 @@
                 <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
             {% endif %}
             <a href="{{ url_for('contas_a_pagar_dashboard') }}">Pagamentos</a>
+            {% if session.store_name %}
+                <span style="color: gray; margin: 0 10px; font-weight: bold;">Loja: {{ session.store_name }}</span>
+            {% endif %}
             <a href="{{ url_for('admin_logout') }}">Sair</a>
         </div>
 
@@ -29,6 +32,16 @@
 
         <h2>Adicionar Documento Diverso</h2>
         <form action="{{ url_for('documentos_diversos_dashboard') }}" method="POST">
+            {% if session.role == 'super_admin' %}
+            <label for="store_id">Loja:</label>
+            <select id="store_id" name="store_id" required>
+                <option value="">Selecione uma loja</option>
+                {% for store in stores %}
+                    <option value="{{ store.id }}">{{ store.name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
             <label for="numero_caixa">Número da Caixa:</label>
             <input type="text" id="numero_caixa" name="numero_caixa" required>
             
@@ -41,6 +54,9 @@
                 <thead>
                     <tr>
                         <th>ID</th>
+                        {% if session.role == 'super_admin' %}
+                        <th>Loja</th>
+                        {% endif %}
                         <th>Número da Caixa</th>
                         <th>Ações</th>
                     </tr>
@@ -49,6 +65,9 @@
                     {% for item in documentos_diversos %}
                         <tr>
                             <td>{{ item.id }}</td>
+                            {% if session.role == 'super_admin' %}
+                            <td>{{ item.store_name or 'N/A' }}</td>
+                            {% endif %}
                             <td>{{ item.numero_caixa }}</td>
                             <td class="actions">
                                 <a href="{{ url_for('contas_a_pagar_diversos_edit', item_id=item.id) }}" class="edit">Editar</a>

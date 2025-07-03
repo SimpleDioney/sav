@@ -13,6 +13,9 @@
             {% if session.role == 'super_admin' %}
                 <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
             {% endif %}
+            {% if session.store_name %}
+                <span style="color: gray; margin: 0 10px; font-weight: bold;">Loja: {{ session.store_name }}</span>
+            {% endif %}
             <a href="{{ url_for('admin_logout') }}">Sair</a>
         </div>
 
@@ -28,6 +31,16 @@
 
         <h2>Adicionar Ficha de Acerto</h2>
         <form action="{{ url_for('cobranca_dashboard') }}" method="POST">
+            {% if session.role == 'super_admin' %}
+            <label for="store_id">Loja:</label>
+            <select id="store_id" name="store_id" required>
+                <option value="">Selecione uma loja</option>
+                {% for store in stores %}
+                    <option value="{{ store.id }}">{{ store.name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
             <label for="ficha_acerto">Ficha de Acerto:</label>
             <input type="text" id="ficha_acerto" name="ficha_acerto" required>
             
@@ -49,22 +62,28 @@
                 <thead>
                     <tr>
                         <th>ID</th>
+                        {% if session.role == 'super_admin' %}
+                        <th>Loja</th>
+                        {% endif %}
                         <th>Ficha de Acerto</th>
                         <th>Caixa</th>
                         <th>Cliente (De X)</th>
                         <th>Cliente (Até Y)</th>
-                        <th>Ações</th> {# COLUNA DE AÇÕES ADICIONADA AQUI #}
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in fichas_acerto %}
                         <tr>
                             <td>{{ item.id }}</td>
+                            {% if session.role == 'super_admin' %}
+                            <td>{{ item.store_name or 'N/A' }}</td>
+                            {% endif %}
                             <td>{{ item.ficha_acerto }}</td>
                             <td>{{ item.caixa }}</td>
                             <td>{{ item.range_cliente_inicio }}</td>
                             <td>{{ item.range_cliente_fim }}</td>
-                            <td class="actions"> {# BOTÕES ADICIONADOS AQUI #}
+                            <td class="actions">
                                 <a href="{{ url_for('cobranca_fichas_acerto_edit', item_id=item.id) }}" class="edit">Editar</a>
                                 <form action="{{ url_for('cobranca_fichas_acerto_delete', item_id=item.id) }}" method="POST" style="display:inline;">
                                     <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir esta ficha?');">Excluir</button>

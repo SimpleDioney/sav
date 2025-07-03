@@ -10,8 +10,8 @@
     <div class="container">
         <h1>Gerenciar Usuários</h1>
         <div class="admin-nav">
-            <a href="{{ url_for('admin_logout') }}">Sair</a>
             <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+            <a href="{{ url_for('admin_logout') }}">Sair</a>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -34,16 +34,24 @@
             
             <label for="role">Departamento/Função:</label>
             <select id="role" name="role" required>
-                <option value="super_admin">Super Admin</option>
-                <option value="admin_rh">Admin RH</option>
                 <option value="admin_patrimonio">Admin Patrimônio</option>
+                <option value="admin_rh">Admin RH</option>
                 <option value="admin_contas_a_pagar">Admin Contas a Pagar</option>
                 <option value="admin_cobranca">Admin Cobrança</option>
+                <option value="super_admin">Super Admin</option>
             </select>
 
-            <label for="can_add_users">
-                <input type="checkbox" id="can_add_users" name="can_add_users">
-                Permitir criar novos usuários neste departamento
+            <label for="store_id">Loja:</label>
+            <select id="store_id" name="store_id">
+                <option value="">Nenhuma</option> <!-- Opção para não associar -->
+                {% for store in stores %}
+                    <option value="{{ store.id }}">{{ store.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label>
+                <input type="checkbox" name="can_add_users">
+                Permitir criar novos usuários
             </label>
             
             <button type="submit">Criar Usuário</button>
@@ -56,8 +64,9 @@
                     <tr>
                         <th>ID</th>
                         <th>Usuário</th>
-                        <th>Departamento/Função</th>
-                        <th>Pode Criar Usuários?</th>
+                        <th>Função</th>
+                        <th>Loja</th>
+                        <th>Pode Criar?</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -66,10 +75,10 @@
                         <tr>
                             <td>{{ user.id }}</td>
                             <td>{{ user.username }}</td>
-                            <td>{{ user.role | replace('_', ' ') | title }}</td> {# Formata o nome da função #}
+                            <td>{{ user.role | replace('_', ' ') | title }}</td>
+                            <td>{{ user.store_name or 'N/A' }}</td>
                             <td>{{ 'Sim' if user.can_add_users else 'Não' }}</td>
                             <td class="actions">
-                                {# Futuramente: Botão de editar usuário #}
                                 <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
                                     <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir o usuário {{ user.username }}?');">Excluir</button>
                                 </form>

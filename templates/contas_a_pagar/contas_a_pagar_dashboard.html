@@ -14,6 +14,9 @@
                 <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
             {% endif %}
             <a href="{{ url_for('documentos_diversos_dashboard') }}">Documentos Diversos</a>
+            {% if session.store_name %}
+                <span style="color: gray; margin: 0 10px; font-weight: bold;">Loja: {{ session.store_name }}</span>
+            {% endif %}
             <a href="{{ url_for('admin_logout') }}">Sair</a>
         </div>
 
@@ -29,6 +32,16 @@
 
         <h2>Adicionar Pagamento</h2>
         <form action="{{ url_for('contas_a_pagar_dashboard') }}" method="POST">
+            {% if session.role == 'super_admin' %}
+            <label for="store_id">Loja:</label>
+            <select id="store_id" name="store_id" required>
+                <option value="">Selecione uma loja</option>
+                {% for store in stores %}
+                    <option value="{{ store.id }}">{{ store.name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
             <label for="pagamento_data_inicio">Data Início (X):</label>
             <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" required>
             
@@ -47,6 +60,9 @@
                 <thead>
                     <tr>
                         <th>ID</th>
+                        {% if session.role == 'super_admin' %}
+                        <th>Loja</th>
+                        {% endif %}
                         <th>Data Início</th>
                         <th>Data Fim</th>
                         <th>Caixa</th>
@@ -57,6 +73,9 @@
                     {% for item in pagamentos %}
                         <tr>
                             <td>{{ item.id }}</td>
+                            {% if session.role == 'super_admin' %}
+                            <td>{{ item.store_name or 'N/A' }}</td>
+                            {% endif %}
                             <td>{{ item.pagamento_data_inicio }}</td>
                             <td>{{ item.pagamento_data_fim }}</td>
                             <td>{{ item.caixa }}</td>
