@@ -1,6 +1,7 @@
 # app.py
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import sqlite3
+import os
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import init_app, get_db, close_db, DATABASE
