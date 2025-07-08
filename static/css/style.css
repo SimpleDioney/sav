@@ -198,3 +198,106 @@ table tbody tr:hover {
 .messages .success { background: var(--success-color); }
 .messages .danger { background: var(--danger-color); }
 .messages .info { background: var(--secondary-color); }
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.dashboard-card {
+    background: var(--card-bg-color);
+    border-radius: var(--border-radius-lg);
+    padding: 25px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--secondary-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-bottom: 4px solid var(--border-color);
+    transition: all var(--transition-speed) ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.dashboard-card .icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    transition: transform var(--transition-speed) ease;
+}
+
+.dashboard-card:hover .icon {
+    transform: scale(1.1);
+}
+
+.dashboard-card span {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: block;
+}
+
+.department-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+.department-checkboxes label {
+    background-color: #f8f9fa;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    transition: all var(--transition-speed) ease;
+}
+
+.department-checkboxes input[type="checkbox"] {
+    /* Esconde o checkbox padrão */
+    display: none;
+}
+
+.department-checkboxes input[type="checkbox"] + .checkbox-custom-display {
+    /* Cria um novo display para o checkbox */
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    display: inline-block;
+    position: relative;
+    transition: all var(--transition-speed) ease;
+}
+
+.department-checkboxes input[type="checkbox"]:checked + .checkbox-custom-display {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Adiciona o "check" quando selecionado */
+.department-checkboxes input[type="checkbox"]:checked + .checkbox-custom-display::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+
+.department-checkboxes label:hover {
+    border-color: var(--primary-color);
+    background-color: #fff;
+}

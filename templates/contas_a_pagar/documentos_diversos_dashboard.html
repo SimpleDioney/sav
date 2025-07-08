@@ -1,71 +1,65 @@
 {% extends "base.html" %}
 
-{% block title %}Painel Documentos Diversos - SAV{% endblock %}
+{% block title %}Painel Documentos Diversos{% endblock %}
 
 {% block content %}
-    <h2>Painel Contas a Pagar - Documentos Diversos</h2>
+<div class="card">
     <div class="admin-nav">
-        {% if session.role == 'super_admin' %}
-            <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
-        {% endif %}
-        {% if session.store_name %}
-            <span class="store-info"><i class="fas fa-store"></i> {{ session.store_name }}</span>
-        {% endif %}
-        <a href="{{ url_for('contas_a_pagar_dashboard') }}">Pagamentos</a>
+        <a href="{{ url_for('contas_a_pagar_dashboard') }}"><i class="fas fa-money-bill-wave"></i> Ir para Pagamentos</a>
         <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a>
-        
     </div>
 
-    <h3>Adicionar Documento Diverso</h3>
-    <form action="{{ url_for('documentos_diversos_dashboard') }}" method="POST">
-        {% if session.role == 'super_admin' %}
-        <label for="store_id">EMPRESA:</label>
-        <select id="store_id" name="store_id" required>
-            <option value="">Selecione uma EMPRESA</option>
-            {% for store in stores %}
-                <option value="{{ store.id }}">{{ store.name }}</option>
-            {% endfor %}
-        </select>
-        {% endif %}
-
-        <label for="numero_caixa">Número da Caixa:</label>
-        <input type="text" id="numero_caixa" name="numero_caixa" required>
-        
-        <button type="submit">Adicionar Documento</button>
-    </form>
-
-    <h3>Documentos Diversos Existentes</h3>
-    {% if documentos_diversos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    {% if session.role == 'super_admin' %}
-                    <th>EMPRESA</th>
-                    {% endif %}
-                    <th>Número da Caixa</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in documentos_diversos %}
-                    <tr>
-                        <td>{{ item.id }}</td>
-                        {% if session.role == 'super_admin' %}
-                        <td>{{ item.store_name or 'N/A' }}</td>
-                        {% endif %}
-                        <td>{{ item.numero_caixa }}</td>
-                        <td class="actions">
-                            <a href="{{ url_for('contas_a_pagar_diversos_edit', item_id=item.id) }}" class="edit">Editar</a>
-                            <form action="{{ url_for('contas_a_pagar_diversos_delete', item_id=item.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir este documento?');">Excluir</button>
-                            </form>
-                        </td>
-                    </tr>
+    <h2><i class="fas fa-file-alt"></i> Adicionar Documento Diverso</h2>
+    <div class="form-section">
+        <form action="{{ url_for('documentos_diversos_dashboard') }}" method="POST">
+            {% if session.role == 'super_admin' %}
+            <label for="store_id">EMPRESA:</label>
+            <select id="store_id" name="store_id" required>
+                <option value="">Selecione uma EMPRESA</option>
+                {% for store in stores %}
+                    <option value="{{ store.id }}">{{ store.name }}</option>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhum documento diverso cadastrado ainda.</p>
-    {% endif %}
+            </select>
+            {% endif %}
+
+            <label for="numero_caixa">Número da Caixa:</label>
+            <input type="text" id="numero_caixa" name="numero_caixa" required>
+            
+            <button type="submit"><i class="fas fa-plus"></i> Adicionar Documento</button>
+        </form>
+    </div>
+
+    <h2><i class="fas fa-list-ul"></i> Documentos Diversos Existentes</h2>
+    <div class="table-wrapper">
+        {% if documentos_diversos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        {% if session.role == 'super_admin' %}<th>EMPRESA</th>{% endif %}
+                        <th>Número da Caixa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in documentos_diversos %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            {% if session.role == 'super_admin' %}<td>{{ item.store_name or 'N/A' }}</td>{% endif %}
+                            <td>{{ item.numero_caixa }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('contas_a_pagar_diversos_edit', item_id=item.id) }}" class="edit" title="Editar"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('contas_a_pagar_diversos_delete', item_id=item.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhum documento diverso cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

@@ -1,82 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}Painel Contas a Pagar - Pagamentos{% endblock %}
+{% block title %}Painel Contas a Pagar{% endblock %}
 
 {% block content %}
-    <h2>Painel Contas a Pagar - Pagamentos</h2>
+<div class="card">
     <div class="admin-nav">
-          {% if session.role == 'super_admin' %}
-            <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+        {% if session.role == 'super_admin' %}
+            <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-user-shield"></i> Dashboard Super Admin</a>
         {% endif %}
-        <a href="{{ url_for('documentos_diversos_dashboard') }}">Documentos Diversos</a>
-        
+        <a href="{{ url_for('documentos_diversos_dashboard') }}"><i class="fas fa-folder-open"></i> Documentos Diversos</a>
         {% if session.store_name %}
             <span class="store-info"><i class="fas fa-store"></i> {{ session.store_name }}</span>
         {% endif %}
         <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a>
-    
     </div>
 
-    <h3>Adicionar Pagamento</h3>
-    <form action="{{ url_for('contas_a_pagar_dashboard') }}" method="POST">
-        {% if session.role == 'super_admin' %}
-        <label for="store_id">EMPRESA:</label>
-        <select id="store_id" name="store_id" required>
-            <option value="">Selecione uma EMPRESA</option>
-            {% for store in stores %}
-                <option value="{{ store.id }}">{{ store.name }}</option>
-            {% endfor %}
-        </select>
-        {% endif %}
-
-        <label for="pagamento_data_inicio">Data Início (X):</label>
-        <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" required>
-        
-        <label for="pagamento_data_fim">Data Fim (Y):</label>
-        <input type="date" id="pagamento_data_fim" name="pagamento_data_fim" required>
-        
-        <label for="caixa">Caixa:</label>
-        <input type="text" id="caixa" name="caixa" required>
-        
-        <button type="submit">Adicionar Pagamento</button>
-    </form>
-
-    <h3>Pagamentos Existentes</h3>
-    {% if pagamentos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    {% if session.role == 'super_admin' %}
-                    <th>EMPRESA</th>
-                    {% endif %}
-                    <th>Data Início</th>
-                    <th>Data Fim</th>
-                    <th>Caixa</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in pagamentos %}
-                    <tr>
-                        <td>{{ item.id }}</td>
-                        {% if session.role == 'super_admin' %}
-                        <td>{{ item.store_name or 'N/A' }}</td>
-                        {% endif %}
-                        <td>{{ item.pagamento_data_inicio }}</td>
-                        <td>{{ item.pagamento_data_fim }}</td>
-                        <td>{{ item.caixa }}</td>
-                        <td class="actions">
-                            <a href="{{ url_for('contas_a_pagar_pagamentos_edit', item_id=item.id) }}" class="edit">Editar</a>
-                            <form action="{{ url_for('contas_a_pagar_pagamentos_delete', item_id=item.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir este pagamento?');">Excluir</button>
-                            </form>
-                        </td>
-                    </tr>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="messages">
+                {% for category, message in messages %}
+                    <li class="{{ category }}"><i class="fas fa-exclamation-circle"></i> {{ message }}</li>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhum pagamento cadastrado ainda.</p>
-    {% endif %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <h2><i class="fas fa-money-bill-wave"></i> Adicionar Pagamento</h2>
+    <div class="form-section">
+        <form action="{{ url_for('contas_a_pagar_dashboard') }}" method="POST">
+            {% if session.role == 'super_admin' %}
+                <label for="store_id">EMPRESA:</label>
+                <select id="store_id" name="store_id" required>
+                    <option value="">Selecione uma EMPRESA</option>
+                    {% for store in stores %}
+                        <option value="{{ store.id }}">{{ store.name }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+            
+            <label for="pagamento_data_inicio">Data Início (X):</label>
+            <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" required>
+            
+            <label for="pagamento_data_fim">Data Fim (Y):</label>
+            <input type="date" id="pagamento_data_fim" name="pagamento_data_fim" required>
+            
+            <label for="caixa">Caixa:</label>
+            <input type="text" id="caixa" name="caixa" required>
+            
+            <button type="submit"><i class="fas fa-plus"></i> Adicionar Pagamento</button>
+        </form>
+    </div>
+
+    <h2><i class="fas fa-list-ul"></i> Pagamentos Existentes</h2>
+    <div class="table-wrapper">
+        {% if pagamentos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        {% if session.role == 'super_admin' %}
+                        <th>EMPRESA</th>
+                        {% endif %}
+                        <th>Data Início</th>
+                        <th>Data Fim</th>
+                        <th>Caixa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in pagamentos %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            {% if session.role == 'super_admin' %}
+                            <td>{{ item.store_name or 'N/A' }}</td>
+                            {% endif %}
+                            <td>{{ item.pagamento_data_inicio }}</td>
+                            <td>{{ item.pagamento_data_fim }}</td>
+                            <td>{{ item.caixa }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('contas_a_pagar_pagamentos_edit', item_id=item.id) }}" title="Editar" class="edit"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('contas_a_pagar_pagamentos_delete', item_id=item.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" title="Excluir" class="delete"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhum pagamento cadastrado ainda.</p>
+        {% endif %}
+    </div>
+
+</div>
 {% endblock %}

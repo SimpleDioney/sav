@@ -1,77 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}Gerenciar Usuários - SAVIO{% endblock %}
+{% block title %}Gerenciar Usuários{% endblock %}
 
 {% block content %}
-    <h2>Gerenciar Usuários</h2>
+<div class="card">
     <div class="admin-nav">
-        <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+        <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+        <a href="{{ url_for('manage_stores') }}"><i class="fas fa-store-alt"></i> Gerenciar EMPRESAS</a>
     </div>
 
-    <h3>Criar Novo Usuário</h3>
-    <form action="{{ url_for('user_management') }}" method="POST">
-        <label for="username">Usuário:</label>
-        <input type="text" id="username" name="username" required>
-        
-        <label for="password">Senha:</label>
-        <input type="password" id="password" name="password" required>
-        
-        <label for="role">Departamento/Função:</label>
-        <select id="role" name="role" required>
-            <option value="admin_patrimonio">Admin Patrimônio</option>
-            <option value="admin_rh">Admin RH</option>
-            <option value="admin_contas_a_pagar">Admin Contas a Pagar</option>
-            <option value="admin_cobranca">Admin Cobrança</option>
-            <option value="super_admin">Super Admin</option>
-        </select>
+    <h2><i class="fas fa-user-plus"></i> Criar Novo Usuário</h2>
+    <div class="form-section">
+        <form action="{{ url_for('user_management') }}" method="POST">
+            <label for="username">Usuário:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="password">Senha:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <label for="role">Departamento/Função:</label>
+            <select id="role" name="role" required>
+                <option value="admin_patrimonio">Admin Patrimônio</option>
+                <option value="admin_rh">Admin RH</option>
+                <option value="admin_contas_a_pagar">Admin Contas a Pagar</option>
+                <option value="admin_cobranca">Admin Cobrança</option>
+                <option value="super_admin">Super Admin</option>
+            </select>
 
-        <label for="store_id">EMPRESA:</label>
-        <select id="store_id" name="store_id">
-            <option value="">Nenhuma</option>
-            {% for store in stores %}
-                <option value="{{ store.id }}">{{ store.name }}</option>
-            {% endfor %}
-        </select>
-
-        <label style="display: flex; align-items: center; gap: 10px;">
-            <input type="checkbox" name="can_add_users" style="width: auto;">
-            Permitir criar novos usuários
-        </label>
-        
-        <button type="submit">Criar Usuário</button>
-    </form>
-
-    <h3>Usuários Existentes</h3>
-    {% if users %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Usuário</th>
-                    <th>Função</th>
-                    <th>EMPRESA</th>
-                    <th>Pode Criar?</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.role | replace('_', ' ') | title }}</td>
-                        <td>{{ user.store_name or 'N/A' }}</td>
-                        <td>{{ 'Sim' if user.can_add_users else 'Não' }}</td>
-                        <td class="actions">
-                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir o usuário {{ user.username }}?');">Excluir</button>
-                            </form>
-                        </td>
-                    </tr>
+            <label for="store_id">EMPRESA:</label>
+            <select id="store_id" name="store_id">
+                <option value="">Nenhuma</option>
+                {% for store in stores %}
+                    <option value="{{ store.id }}">{{ store.name }}</option>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhum usuário cadastrado ainda.</p>
-    {% endif %}
+            </select>
+
+            <label>
+                <input type="checkbox" name="can_add_users" style="width: auto; margin-right: 8px;">
+                Permitir criar novos usuários
+            </label>
+            
+            <button type="submit"><i class="fas fa-plus"></i> Criar Usuário</button>
+        </form>
+    </div>
+
+    <h2><i class="fas fa-users"></i> Usuários Existentes</h2>
+    <div class="table-wrapper">
+        {% if users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuário</th>
+                        <th>Função</th>
+                        <th>EMPRESA</th>
+                        <th>Pode Criar?</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.role | replace('_', ' ') | title }}</td>
+                            <td>{{ user.store_name or 'N/A' }}</td>
+                            <td>{{ 'Sim' if user.can_add_users else 'Não' }}</td>
+                            <td class="actions">
+                                <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhum usuário cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

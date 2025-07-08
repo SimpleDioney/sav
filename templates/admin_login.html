@@ -3,15 +3,29 @@
 {% block title %}Login Administrativo{% endblock %}
 
 {% block content %}
-    <h2>Login Administrativo</h2>
-    <form action="{{ url_for('admin_login') }}" method="POST">
-        <label for="username">Usuário:</label>
-        <input type="text" id="username" name="username" required>
-        
-        <label for="password">Senha:</label>
-        <input type="password" id="password" name="password" required>
-        
-        <button type="submit"><i class="fas fa-sign-in-alt"></i> Entrar</button>
-    </form>
+<div class="card" style="max-width: 500px; margin: 40px auto;">
+    <h2><i class="fas fa-lock"></i> Login Administrativo</h2>
+    <div class="form-section">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('admin_login') }}" method="POST">
+            <label for="username">Usuário:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="password">Senha:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <button type="submit"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+        </form>
+    </div>
     <p style="text-align: center; margin-top: 20px;"><a href="{{ url_for('index') }}">Voltar para a Página Inicial</a></p>
+</div>
 {% endblock %}
