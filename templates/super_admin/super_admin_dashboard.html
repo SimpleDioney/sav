@@ -1,40 +1,22 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARQUIVOS</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>ARQUIVOS</h1>
-        <div class="admin-nav">
-            <a href="{{ url_for('user_management') }}">Gerenciar Usuários</a>
-            <a href="{{ url_for('manage_stores') }}">Gerenciar EMPRESAS</a>
-            <a href="{{ url_for('admin_logout') }}">Sair</a>
-        </div>
+{% extends "base.html" %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+{% block title %}Dashboard Super Admin - SAVIO{% endblock %}
 
-        <p>Bem-vindo! Use o menu acima para gerenciar o sistema.</p>
-        
-        <h2>Acessar Arquivos por Departamento:</h2>
-        <ul>
-            <li><a href="{{ url_for('patrimonio_dashboard') }}">Patrimônio</a></li>
-            <li><a href="{{ url_for('rh_dashboard') }}">RH</a></li>
-            <li><a href="{{ url_for('contas_a_pagar_dashboard') }}">Contas a Pagar (Pagamentos)</a></li>
-            <li><a href="{{ url_for('documentos_diversos_dashboard') }}">Contas a Pagar (Documentos Diversos)</a></li>
-            <li><a href="{{ url_for('cobranca_dashboard') }}">Cobrança</a></li>
-        </ul>
+{% block content %}
+    <h2>Painel do Super Administrador</h2>
+    <p>Bem-vindo! Use o menu abaixo ou no cabeçalho para gerenciar o sistema.</p>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('user_management') }}">Gerenciar Usuários</a>
+        <a href="{{ url_for('manage_stores') }}">Gerenciar EMPRESAS</a>
     </div>
-</body>
-</html>
+
+    <h3>Acessar Arquivos por Departamento:</h3>
+    <ul>
+        <li><a href="{{ url_for('patrimonio_dashboard') }}">Patrimônio</a></li>
+        <li><a href="{{ url_for('rh_dashboard') }}">RH</a></li>
+        <li><a href="{{ url_for('contas_a_pagar_dashboard') }}">Contas a Pagar (Pagamentos)</a></li>
+        <li><a href="{{ url_for('documentos_diversos_dashboard') }}">Contas a Pagar (Documentos Diversos)</a></li>
+        <li><a href="{{ url_for('cobranca_dashboard') }}">Cobrança</a></li>
+    </ul>
+{% endblock %}

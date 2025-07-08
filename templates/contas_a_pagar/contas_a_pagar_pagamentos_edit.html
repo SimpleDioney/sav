@@ -1,41 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Pagamento</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Editar Pagamento</h1>
-        <div class="admin-nav">
-            <a href="{{ url_for('contas_a_pagar_dashboard') }}">Voltar para Pagamentos</a>
-            <a href="{{ url_for('admin_logout') }}">Sair</a>
-        </div>
+{% extends "base.html" %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+{% block title %}Editar Pagamento - SAV{% endblock %}
 
-        <form action="{{ url_for('contas_a_pagar_pagamentos_edit', item_id=item.id) }}" method="POST">
-            <label for="pagamento_data_inicio">Data Início (X):</label>
-            <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" value="{{ item.pagamento_data_inicio }}" required>
-            
-            <label for="pagamento_data_fim">Data Fim (Y):</label>
-            <input type="date" id="pagamento_data_fim" name="pagamento_data_fim" value="{{ item.pagamento_data_fim }}" required>
-            
-            <label for="caixa">Caixa:</label>
-            <input type="text" id="caixa" name="caixa" value="{{ item.caixa }}" required>
-            
-            <button type="submit">Salvar Alterações</button>
-        </form>
+{% block content %}
+    <h2>Editar Pagamento</h2>
+    <div class="admin-nav">
+        <a href="{{ url_for('contas_a_pagar_dashboard') }}">Voltar para Pagamentos</a>
     </div>
-</body>
-</html>
+
+    <form action="{{ url_for('contas_a_pagar_pagamentos_edit', item_id=item.id) }}" method="POST">
+        <label for="pagamento_data_inicio">Data Início (X):</label>
+        <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" value="{{ item.pagamento_data_inicio }}" required>
+        
+        <label for="pagamento_data_fim">Data Fim (Y):</label>
+        <input type="date" id="pagamento_data_fim" name="pagamento_data_fim" value="{{ item.pagamento_data_fim }}" required>
+        
+        <label for="caixa">Caixa:</label>
+        <input type="text" id="caixa" name="caixa" value="{{ item.caixa }}" required>
+        
+        <button type="submit">Salvar Alterações</button>
+    </form>
+{% endblock %}

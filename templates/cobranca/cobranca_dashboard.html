@@ -1,101 +1,84 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Cobrança</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Painel Cobrança</h1>
-        <div class="admin-nav">
-            {% if session.role == 'super_admin' %}
-                <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
-            {% endif %}
-            {% if session.store_name %}
-                <span style="color: gray; margin: 0 10px; font-weight: bold;">EMPRESA: {{ session.store_name }}</span>
-            {% endif %}
-            <a href="{{ url_for('admin_logout') }}">Sair</a>
-        </div>
+{% extends "base.html" %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+{% block title %}Painel Cobrança - SAV{% endblock %}
 
-        <h2>Adicionar Ficha de Acerto</h2>
-        <form action="{{ url_for('cobranca_dashboard') }}" method="POST">
-            {% if session.role == 'super_admin' %}
-            <label for="store_id">EMPRESA:</label>
-            <select id="store_id" name="store_id" required>
-                <option value="">Selecione uma EMPRESA</option>
-                {% for store in stores %}
-                    <option value="{{ store.id }}">{{ store.name }}</option>
-                {% endfor %}
-            </select>
-            {% endif %}
-
-            <label for="ficha_acerto">Ficha de Acerto:</label>
-            <input type="text" id="ficha_acerto" name="ficha_acerto" required>
-            
-            <label for="caixa">Caixa:</label>
-            <input type="text" id="caixa" name="caixa" required>
-            
-            <label for="range_cliente_inicio">Número Cliente (De X):</label>
-            <input type="number" id="range_cliente_inicio" name="range_cliente_inicio" required>
-            
-            <label for="range_cliente_fim">Número Cliente (Até Y):</label>
-            <input type="number" id="range_cliente_fim" name="range_cliente_fim" required>
-            
-            <button type="submit">Adicionar Ficha de Acerto</button>
-        </form>
-
-        <h2>Fichas de Acerto Existentes</h2>
-        {% if fichas_acerto %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        {% if session.role == 'super_admin' %}
-                        <th>EMPRESA</th>
-                        {% endif %}
-                        <th>Ficha de Acerto</th>
-                        <th>Caixa</th>
-                        <th>Cliente (De X)</th>
-                        <th>Cliente (Até Y)</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in fichas_acerto %}
-                        <tr>
-                            <td>{{ item.id }}</td>
-                            {% if session.role == 'super_admin' %}
-                            <td>{{ item.store_name or 'N/A' }}</td>
-                            {% endif %}
-                            <td>{{ item.ficha_acerto }}</td>
-                            <td>{{ item.caixa }}</td>
-                            <td>{{ item.range_cliente_inicio }}</td>
-                            <td>{{ item.range_cliente_fim }}</td>
-                            <td class="actions">
-                                <a href="{{ url_for('cobranca_fichas_acerto_edit', item_id=item.id) }}" class="edit">Editar</a>
-                                <form action="{{ url_for('cobranca_fichas_acerto_delete', item_id=item.id) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir esta ficha?');">Excluir</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>Nenhuma ficha de acerto cadastrada ainda.</p>
+{% block content %}
+<div class="admin-nav">
+        {% if session.role == 'super_admin' %}
+            <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
         {% endif %}
+        {% if session.store_name %}
+            <span class="store-info"><i class="fas fa-store"></i> {{ session.store_name }}</span>
+        {% endif %}
+        <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a>
     </div>
-</body>
-</html>
+    <h2>Painel Cobrança</h2>
+
+    <h3>Adicionar Ficha de Acerto</h3>
+    <form action="{{ url_for('cobranca_dashboard') }}" method="POST">
+        {% if session.role == 'super_admin' %}
+        <label for="store_id">EMPRESA:</label>
+        <select id="store_id" name="store_id" required>
+            <option value="">Selecione uma EMPRESA</option>
+            {% for store in stores %}
+                <option value="{{ store.id }}">{{ store.name }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+
+        <label for="ficha_acerto">Ficha de Acerto:</label>
+        <input type="text" id="ficha_acerto" name="ficha_acerto" required>
+        
+        <label for="caixa">Caixa:</label>
+        <input type="text" id="caixa" name="caixa" required>
+        
+        <label for="range_cliente_inicio">Número Cliente (De X):</label>
+        <input type="number" id="range_cliente_inicio" name="range_cliente_inicio" required>
+        
+        <label for="range_cliente_fim">Número Cliente (Até Y):</label>
+        <input type="number" id="range_cliente_fim" name="range_cliente_fim" required>
+        
+        <button type="submit">Adicionar Ficha de Acerto</button>
+    </form>
+
+    <h3>Fichas de Acerto Existentes</h3>
+    {% if fichas_acerto %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    {% if session.role == 'super_admin' %}
+                    <th>EMPRESA</th>
+                    {% endif %}
+                    <th>Ficha de Acerto</th>
+                    <th>Caixa</th>
+                    <th>Cliente (De X)</th>
+                    <th>Cliente (Até Y)</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in fichas_acerto %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        {% if session.role == 'super_admin' %}
+                        <td>{{ item.store_name or 'N/A' }}</td>
+                        {% endif %}
+                        <td>{{ item.ficha_acerto }}</td>
+                        <td>{{ item.caixa }}</td>
+                        <td>{{ item.range_cliente_inicio }}</td>
+                        <td>{{ item.range_cliente_fim }}</td>
+                        <td class="actions">
+                            <a href="{{ url_for('cobranca_fichas_acerto_edit', item_id=item.id) }}" class="edit">Editar</a>
+                            <form action="{{ url_for('cobranca_fichas_acerto_delete', item_id=item.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir esta ficha?');">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma ficha de acerto cadastrada ainda.</p>
+    {% endif %}
+{% endblock %}

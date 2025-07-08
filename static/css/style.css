@@ -1,232 +1,200 @@
-/* style.css */
+/* static/css/style.css */
 
-/* Estilos Gerais do Corpo */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #3498db;
+    --primary-hover: #2980b9;
+    --secondary-color: #2c3e50;
+    --danger-color: #e74c3c;
+    --warning-color: #f1c40f;
+    --success-color: #2ecc71;
+    --bg-color: #ecf0f1;
+    --card-bg-color: #ffffff;
+    --text-color: #34495e;
+    --border-color: #bdc3c7;
+    --border-radius: 6px;
+    --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --transition-speed: 0.3s;
+}
+
 body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f8f9fa; /* Um cinza muito claro */
-    color: #212529; /* Cor de texto principal, quase preto */
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     line-height: 1.6;
+    margin: 0;
 }
 
-/* Container Principal */
 .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 40px auto;
-    background-color: #ffffff;
-    padding: 40px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+    padding: 20px;
 }
 
-/* Cabeçalhos */
 h1, h2 {
-    color: #343a40;
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-weight: 500;
+    color: var(--secondary-color);
+    font-weight: 600;
 }
 
 h1 {
-    font-size: 2.25rem;
+    font-size: 2.2rem;
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
 }
 
 h2 {
-    font-size: 1.75rem;
-    border-bottom: 1px solid #dee2e6; /* Linha sutil abaixo do h2 */
+    font-size: 1.8rem;
+    margin-top: 30px;
+    margin-bottom: 20px;
     padding-bottom: 10px;
-    margin-top: 40px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-/* Formulários */
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.card {
+    background: var(--card-bg-color);
+    padding: 30px 40px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
     margin-bottom: 30px;
 }
 
-form label {
-    font-weight: bold;
-    margin-bottom: -10px; /* Aproxima o label do campo */
+/* --- Navegação --- */
+.admin-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
 }
 
-form input[type="text"],
-form input[type="password"],
-form textarea,
-form select {
+.admin-nav a {
+    background: var(--secondary-color);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color var(--transition-speed), transform var(--transition-speed);
+}
+.admin-nav a:hover {
+    background: #34495e;
+    transform: translateY(-2px);
+}
+.admin-nav .store-info {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* --- Formulários --- */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+form label {
+    font-weight: 500;
+    color: var(--secondary-color);
+}
+
+form input, form select, form textarea {
     padding: 12px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
     width: 100%;
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-size: 1rem;
+    transition: all var(--transition-speed);
 }
-
-form input:focus,
-form select:focus,
-form textarea:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+form input:focus, form select:focus, form textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
     outline: none;
 }
 
 form button {
-    background-color: #007bff;
+    background: linear-gradient(45deg, var(--primary-color), #2980b9);
     color: white;
-    padding: 12px 20px;
+    padding: 12px 25px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-    align-self: flex-start; /* Alinha o botão à esquerda */
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all var(--transition-speed);
+    align-self: flex-start;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-
 form button:hover {
-    background-color: #0056b3;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* Mensagens Flash (Alertas) */
-.messages {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 30px 0;
+/* --- Tabelas --- */
+.table-wrapper {
+    overflow-x: auto;
 }
 
-.messages li {
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    border: 1px solid transparent;
-}
-
-.messages .success {
-    background-color: #d4edda;
-    color: #155724;
-    border-color: #c3e6cb;
-}
-
-.messages .danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-color: #f5c6cb;
-}
-
-.messages .info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border-color: #bee5eb;
-}
-
-/* Tabelas */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 25px;
-}
-
-table th, table td {
-    border: 1px solid #dee2e6;
-    padding: 12px;
-    text-align: left;
-    vertical-align: middle;
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
 }
 
 table th {
-    background-color: #f8f9fa;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 15px;
+    text-align: left;
     font-weight: 600;
-    color: #495057;
 }
 
-table tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.02); /* Linhas alternadas */
+table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
 }
 
+table tbody tr:last-child td {
+    border-bottom: none;
+}
 table tbody tr:hover {
-    background-color: #e9ecef; /* Efeito ao passar o mouse */
+    background-color: #f7f9fa;
 }
 
-/* Botões de Ação nas Tabelas */
-.actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
+/* --- Ações --- */
+.actions { display: flex; gap: 10px; align-items: center; }
 
 .actions a, .actions button {
-    padding: 6px 12px;
-    border-radius: 4px;
     text-decoration: none;
-    font-size: 0.9em;
-    cursor: pointer;
     border: none;
-    transition: opacity 0.3s ease;
-    color: white;
-    text-align: center;
+    background: none;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2rem;
+    transition: transform var(--transition-speed);
 }
-
-.actions a.edit {
-    background-color: #ffc107; /* Amarelo */
-    color: #212529;
-}
-
-.actions button.delete {
-    background-color: #dc3545; /* Vermelho */
-}
-
 .actions a:hover, .actions button:hover {
-    opacity: 0.8;
+    transform: scale(1.2);
 }
 
-/* Navegação do Admin */
-.admin-nav {
-    text-align: center;
-    margin: -20px 0 30px 0;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #dee2e6;
-}
+.actions .edit { color: var(--warning-color); }
+.actions .delete { color: var(--danger-color); }
 
-.admin-nav a {
-    background-color: #6c757d; /* Cinza escuro */
-    color: white;
-    padding: 10px 18px;
-    border-radius: 4px;
-    text-decoration: none;
-    margin: 0 8px;
-    transition: background-color 0.3s ease;
+/* --- Mensagens Flash --- */
+.messages { list-style: none; padding: 0; margin: 0 0 20px 0; }
+.messages li {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: var(--border-radius);
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-
-.admin-nav a:hover {
-    background-color: #5a6268;
-}
-
-/* Estilo dos Checkboxes em `manage_stores.html` */
-.department-checkboxes {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    padding: 20px;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.department-checkboxes label {
-    font-weight: normal;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-input[type="checkbox"] {
-    width: 1.3em;
-    height: 1.3em;
-    cursor: pointer;
-}
+.messages .success { background: var(--success-color); }
+.messages .danger { background: var(--danger-color); }
+.messages .info { background: var(--secondary-color); }

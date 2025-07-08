@@ -1,88 +1,59 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar EMPRESAS - Super Admin</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .department-checkboxes {
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-        .department-checkboxes label {
-            margin-right: 15px;
-            font-weight: normal;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Gerenciar EMPRESAS</h1>
-        <div class="admin-nav">
-            <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
-            <a href="{{ url_for('user_management') }}">Gerenciar Usuários</a>
-            <a href="{{ url_for('admin_logout') }}">Sair</a>
+{% extends "base.html" %}
+
+{% block title %}Gerenciar EMPRESAS - SAVIO{% endblock %}
+
+{% block content %}
+    <h2>Gerenciar EMPRESAS</h2>
+    <div class="admin-nav">
+        <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+        <a href="{{ url_for('user_management') }}">Gerenciar Usuários</a>
+    </div>
+
+    <h3>Criar Nova EMPRESA</h3>
+    <form action="{{ url_for('manage_stores') }}" method="POST">
+        <label for="name">Nome da EMPRESA:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label>Departamentos da EMPRESA:</label>
+        <div class="department-checkboxes">
+            {% for dept in available_departments %}
+            <label>
+                <input type="checkbox" id="{{ dept }}" name="departments" value="{{ dept }}">
+                {{ dept.replace('_', ' ') | title }}
+            </label>
+            {% endfor %}
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+        <button type="submit">Criar EMPRESA</button>
+    </form>
 
-        <h2>Criar Nova EMPRESA</h2>
-        <form action="{{ url_for('manage_stores') }}" method="POST">
-            <label for="name">Nome da EMPRESA:</label>
-            <input type="text" id="name" name="name" required>
-
-            <label>Departamentos da EMPRESA:</label>
-            <div class="department-checkboxes">
-                {% for dept in available_departments %}
-                <input type="checkbox" id="{{ dept }}" name="departments" value="{{ dept }}">
-                <label for="{{ dept }}">{{ dept.replace('_', ' ') | title }}</label>
-                {% endfor %}
-            </div>
-
-            <button type="submit">Criar EMPRESA</button>
-        </form>
-
-        <h2>EMPRESAS Existentes</h2>
-        {% if stores %}
-            <table>
-                <thead>
+    <h3>EMPRESAS Existentes</h3>
+    {% if stores %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome da EMPRESA</th>
+                    <th>Departamentos</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for store in stores %}
                     <tr>
-                        <th>ID</th>
-                        <th>Nome da EMPRESA</th>
-                        <th>Departamentos</th>
-                        <th>Ações</th>
+                        <td>{{ store.id }}</td>
+                        <td>{{ store.name }}</td>
+                        <td>{{ (store.departments | replace('_', ' ') | title) if store.departments else 'Nenhum' }}</td>
+                        <td class="actions">
+                            <form action="{{ url_for('delete_store', store_id=store.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir a EMPRESA {{ store.name }}?');">Excluir</button>
+                            </form>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for store in stores %}
-                        <tr>
-                            <td>{{ store.id }}</td>
-                            <td>{{ store.name }}</td>
-                            <td>{{ (store.departments | replace('_', ' ') | title) if store.departments else 'Nenhum' }}</td>
-                            <td class="actions">
-                                <form action="{{ url_for('delete_store', store_id=store.id) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir a EMPRESA {{ store.name }}?');">Excluir</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>Nenhuma EMPRESA cadastrada ainda.</p>
-        {% endif %}
-    </div>
-</body>
-</html>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma EMPRESA cadastrada ainda.</p>
+    {% endif %}
+{% endblock %}

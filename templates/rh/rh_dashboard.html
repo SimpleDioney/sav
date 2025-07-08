@@ -1,39 +1,17 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel RH</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Painel RH</h1>
-        <div class="admin-nav">
-            {% if session.role == 'super_admin' %}
-                <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
-            {% endif %}
-            {% if session.store_name %}
-        <span style="color: gray; margin: 0 10px; font-weight: bold;">EMPRESA: {{ session.store_name }}</span>
-    {% endif %}
-            <a href="{{ url_for('admin_logout') }}">Sair</a>
-        </div>
+{% extends "base.html" %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+{% block title %}Painel RH - SAV{% endblock %}
 
-        <p>Bem-vindo ao Painel do Departamento de RH. As funcionalidades de adição e visualização de arquivos serão implementadas aqui.</p>
-        
-        
-
-        <p style="text-align: center; margin-top: 20px;"><a href="{{ url_for('admin_login') }}">Voltar para Login</a></p>
+{% block content %}
+<div class="admin-nav">
+        {% if session.role == 'super_admin' %}
+            <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
+        {% endif %}
+        {% if session.store_name %}
+            <span class="store-info"><i class="fas fa-store"></i> {{ session.store_name }}</span>
+        {% endif %}
+        <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a>
     </div>
-</body>
-</html>
+    <h2>Painel RH</h2>
+    <p>Bem-vindo ao Painel do Departamento de RH. As funcionalidades de adição e visualização de arquivos serão implementadas aqui.</p>
+{% endblock %}

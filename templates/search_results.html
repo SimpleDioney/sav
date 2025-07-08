@@ -1,73 +1,66 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados da Pesquisa</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Resultados da Pesquisa</h1>
-        <p>Pesquisando por: <strong>"{{ query }}"</strong> em <strong>
-            {% if search_by == 'codigo_cliente' %}Código do Cliente (Patrimônio)
-            {% elif search_by == 'nome_cliente' %}Nome do Cliente (Patrimônio)
-            {% elif search_by == 'patrimonio_especifico' %}Patrimônio Específico
-            {% elif search_by == 'caixa_cobranca_range' %}Caixa Cobrança (Fichas de Acerto)
-            {% endif %}
-        </strong></p>
+{% extends "base.html" %}
 
-        {% if results %}
-            {% if search_by == 'caixa_cobranca_range' %}
-                <h2>Resultados de Cobrança (Fichas de Acerto)</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ficha de Acerto</th>
-                            <th>Caixa</th>
-                            <th>Range Cliente (Início)</th>
-                            <th>Range Cliente (Fim)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in results %}
-                            <tr>
-                                <td>{{ item.ficha_acerto }}</td>
-                                <td>{{ item.caixa }}</td>
-                                <td>{{ item.range_cliente_inicio }}</td>
-                                <td>{{ item.range_cliente_fim }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <h2>Resultados de Patrimônio</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Código do Cliente</th>
-                            <th>Nome do Cliente</th>
-                            <th>Patrimônios</th>
-                            <th>Número da Caixa</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in results %}
-                            <tr>
-                                <td>{{ item.codigo_cliente }}</td>
-                                <td>{{ item.nome_cliente }}</td>
-                                <td>{{ item.patrimonios }}</td>
-                                <td>{{ item.numero_caixa }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% endif %}
-        {% else %}
-            <p>Nenhum resultado encontrado para sua pesquisa.</p>
+{% block title %}Resultados da Pesquisa - SAV{% endblock %}
+
+{% block content %}
+    <h2>Resultados da Pesquisa</h2>
+    <p>Pesquisando por: <strong>"{{ query }}"</strong> em <strong>
+        {% if search_by == 'codigo_cliente' %}Código do Cliente (Patrimônio)
+        {% elif search_by == 'nome_cliente' %}Nome do Cliente (Patrimônio)
+        {% elif search_by == 'patrimonio_especifico' %}Patrimônio Específico
+        {% elif search_by == 'caixa_cobranca_range' %}Caixa Cobrança (Fichas de Acerto)
         {% endif %}
-        
-        <p style="text-align: center; margin-top: 20px;"><a href="{{ url_for('index') }}">Voltar para a Pesquisa</a></p>
-    </div>
-</body>
-</html>
+    </strong></p>
+
+    {% if results %}
+        {% if search_by == 'caixa_cobranca_range' %}
+            <h3>Resultados de Cobrança (Fichas de Acerto)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ficha de Acerto</th>
+                        <th>Caixa</th>
+                        <th>Range Cliente (Início)</th>
+                        <th>Range Cliente (Fim)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results %}
+                        <tr>
+                            <td>{{ item.ficha_acerto }}</td>
+                            <td>{{ item.caixa }}</td>
+                            <td>{{ item.range_cliente_inicio }}</td>
+                            <td>{{ item.range_cliente_fim }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <h3>Resultados de Patrimônio</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código do Cliente</th>
+                        <th>Nome do Cliente</th>
+                        <th>Patrimônios</th>
+                        <th>Número da Caixa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results %}
+                        <tr>
+                            <td>{{ item.codigo_cliente }}</td>
+                            <td>{{ item.nome_cliente }}</td>
+                            <td>{{ item.patrimonios }}</td>
+                            <td>{{ item.numero_caixa }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    {% else %}
+        <p>Nenhum resultado encontrado para sua pesquisa.</p>
+    {% endif %}
+    
+    <p style="text-align: center; margin-top: 20px;"><a href="{{ url_for('index') }}">Voltar para a Pesquisa</a></p>
+{% endblock %}
