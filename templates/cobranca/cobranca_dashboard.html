@@ -14,7 +14,7 @@
                 <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
             {% endif %}
             {% if session.store_name %}
-                <span style="color: gray; margin: 0 10px; font-weight: bold;">Loja: {{ session.store_name }}</span>
+                <span style="color: gray; margin: 0 10px; font-weight: bold;">EMPRESA: {{ session.store_name }}</span>
             {% endif %}
             <a href="{{ url_for('admin_logout') }}">Sair</a>
         </div>
@@ -32,9 +32,9 @@
         <h2>Adicionar Ficha de Acerto</h2>
         <form action="{{ url_for('cobranca_dashboard') }}" method="POST">
             {% if session.role == 'super_admin' %}
-            <label for="store_id">Loja:</label>
+            <label for="store_id">EMPRESA:</label>
             <select id="store_id" name="store_id" required>
-                <option value="">Selecione uma empresa</option>
+                <option value="">Selecione uma EMPRESA</option>
                 {% for store in stores %}
                     <option value="{{ store.id }}">{{ store.name }}</option>
                 {% endfor %}
@@ -63,7 +63,7 @@
                     <tr>
                         <th>ID</th>
                         {% if session.role == 'super_admin' %}
-                        <th>Empresa</th>
+                        <th>EMPRESA</th>
                         {% endif %}
                         <th>Ficha de Acerto</th>
                         <th>Caixa</th>

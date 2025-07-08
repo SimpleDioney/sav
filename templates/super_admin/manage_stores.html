@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Empresas - Super Admin</title>
+    <title>Gerenciar EMPRESAS - Super Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         .department-checkboxes {
@@ -21,7 +21,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Gerenciar Empresas</h1>
+        <h1>Gerenciar EMPRESAS</h1>
         <div class="admin-nav">
             <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
             <a href="{{ url_for('user_management') }}">Gerenciar Usuários</a>
@@ -38,12 +38,12 @@
             {% endif %}
         {% endwith %}
 
-        <h2>Criar Nova Empresa</h2>
+        <h2>Criar Nova EMPRESA</h2>
         <form action="{{ url_for('manage_stores') }}" method="POST">
-            <label for="name">Nome da Empresa:</label>
+            <label for="name">Nome da EMPRESA:</label>
             <input type="text" id="name" name="name" required>
 
-            <label>Departamentos da Loja:</label>
+            <label>Departamentos da EMPRESA:</label>
             <div class="department-checkboxes">
                 {% for dept in available_departments %}
                 <input type="checkbox" id="{{ dept }}" name="departments" value="{{ dept }}">
@@ -51,16 +51,16 @@
                 {% endfor %}
             </div>
 
-            <button type="submit">Criar Empresa</button>
+            <button type="submit">Criar EMPRESA</button>
         </form>
 
-        <h2>Empresas Existentes</h2>
+        <h2>EMPRESAS Existentes</h2>
         {% if stores %}
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Nome da Empresa</th>
+                        <th>Nome da EMPRESA</th>
                         <th>Departamentos</th>
                         <th>Ações</th>
                     </tr>
@@ -73,7 +73,7 @@
                             <td>{{ (store.departments | replace('_', ' ') | title) if store.departments else 'Nenhum' }}</td>
                             <td class="actions">
                                 <form action="{{ url_for('delete_store', store_id=store.id) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir a empresa {{ store.name }}?');">Excluir</button>
+                                    <button type="submit" class="delete" onclick="return confirm('Tem certeza que deseja excluir a EMPRESA {{ store.name }}?');">Excluir</button>
                                 </form>
                             </td>
                         </tr>
@@ -81,7 +81,7 @@
                 </tbody>
             </table>
         {% else %}
-            <p>Nenhuma empresa cadastrada ainda.</p>
+            <p>Nenhuma EMPRESA cadastrada ainda.</p>
         {% endif %}
     </div>
 </body>

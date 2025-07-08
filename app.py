@@ -1,14 +1,12 @@
-# app.py
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import sqlite3
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import init_app, get_db, close_db, DATABASE
 from datetime import datetime
-import os
 
 app = Flask(__name__)
-app.secret_key = 'sua_chave_secreta_aqui_E_MUITO_LONGA_E_RANDOMICA_PARA_PRODUCAO' # MUDE ISSO!
+app.secret_key = '09164Duque!Paprika'
 
 # Inicializa o banco de dados com o app Flask
 init_app(app)
@@ -172,7 +170,7 @@ def manage_stores():
         store_name = request.form.get('name', '').strip()
         selected_departments = request.form.getlist('departments')
         if not store_name or not selected_departments:
-            flash('O nome da loja e pelo menos um departamento são obrigatórios.', 'danger')
+            flash('O nome da EMPRESA e pelo menos um departamento são obrigatórios.', 'danger')
         else:
             try:
                 cursor = db.cursor()
@@ -181,9 +179,9 @@ def manage_stores():
                 for dept_role in selected_departments:
                     cursor.execute("INSERT INTO store_departments (store_id, department_role) VALUES (?, ?)", (store_id, dept_role))
                 db.commit()
-                flash(f'Loja "{store_name}" criada com sucesso!', 'success')
+                flash(f'EMPRESA "{store_name}" criada com sucesso!', 'success')
             except sqlite3.IntegrityError:
-                flash(f'Erro: A loja "{store_name}" já existe.', 'danger')
+                flash(f'Erro: A EMPRESA "{store_name}" já existe.', 'danger')
         return redirect(url_for('manage_stores'))
 
     stores_data = db.execute("""
@@ -202,7 +200,7 @@ def delete_store(store_id):
     db.execute("UPDATE users SET store_id = NULL WHERE store_id = ?", (store_id,))
     db.execute("DELETE FROM stores WHERE id = ?", (store_id,))
     db.commit()
-    flash('Loja excluída com sucesso!', 'success')
+    flash('EMPRESA excluída com sucesso!', 'success')
     return redirect(url_for('manage_stores'))
 
 # --- Rotas PATRIMÔNIO ---
@@ -217,7 +215,7 @@ def patrimonio_dashboard():
         if session['role'] == 'super_admin':
             store_id = request.form.get('store_id')
             if not store_id:
-                flash('Como Super Admin, você deve selecionar uma loja.', 'danger')
+                flash('Como Super Admin, você deve selecionar uma EMPRESA.', 'danger')
                 return redirect(url_for('patrimonio_dashboard'))
         else:
             store_id = session.get('store_id')
@@ -276,7 +274,7 @@ def patrimonio_delete(item_id):
 @login_required
 @role_required(['super_admin', 'admin_rh'])
 def rh_dashboard():
-    # TODO: Implementar CRUD e isolamento por store_id como no módulo de Patrimônio
+    # TODO: Implementar CRUD e isolamento por store_id
     return render_template('rh/rh_dashboard.html')
 
 # --- Rotas Contas a Pagar - Pagamentos ---
@@ -290,7 +288,7 @@ def contas_a_pagar_dashboard():
         if session['role'] == 'super_admin':
             store_id = request.form.get('store_id')
             if not store_id:
-                flash('Como Super Admin, você deve selecionar uma loja.', 'danger')
+                flash('Como Super Admin, você deve selecionar uma EMPRESA.', 'danger')
                 return redirect(url_for('contas_a_pagar_dashboard'))
         else:
             store_id = session.get('store_id')
@@ -368,7 +366,7 @@ def documentos_diversos_dashboard():
         if session['role'] == 'super_admin':
             store_id = request.form.get('store_id')
             if not store_id:
-                flash('Como Super Admin, você deve selecionar uma loja.', 'danger')
+                flash('Como Super Admin, você deve selecionar uma EMPRESA.', 'danger')
                 return redirect(url_for('documentos_diversos_dashboard'))
         else:
             store_id = session.get('store_id')
@@ -431,7 +429,7 @@ def cobranca_dashboard():
         if session['role'] == 'super_admin':
             store_id = request.form.get('store_id')
             if not store_id:
-                flash('Como Super Admin, você deve selecionar uma loja.', 'danger')
+                flash('Como Super Admin, você deve selecionar uma EMPRESA.', 'danger')
                 return redirect(url_for('cobranca_dashboard'))
         else:
             store_id = session.get('store_id')
@@ -504,4 +502,4 @@ def cobranca_fichas_acerto_delete(item_id):
     return redirect(url_for('cobranca_dashboard'))
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=8000, debug=True)

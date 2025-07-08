@@ -1,152 +1,232 @@
+/* style.css */
+
+/* Estilos Gerais do Corpo */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
     padding: 20px;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: #f8f9fa; /* Um cinza muito claro */
+    color: #212529; /* Cor de texto principal, quase preto */
+    line-height: 1.6;
 }
 
+/* Container Principal */
 .container {
-    max-width: 800px;
-    margin: 20px auto;
-    background-color: #fff;
-    padding: 30px;
+    max-width: 1000px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    padding: 40px;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra sutil */
 }
 
+/* Cabeçalhos */
 h1, h2 {
-    color: #0056b3;
-    text-align: center;
-    margin-bottom: 25px;
+    color: #343a40;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 500;
 }
 
+h1 {
+    font-size: 2.25rem;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h2 {
+    font-size: 1.75rem;
+    border-bottom: 1px solid #dee2e6; /* Linha sutil abaixo do h2 */
+    padding-bottom: 10px;
+    margin-top: 40px;
+}
+
+/* Formulários */
 form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 25px;
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
 form label {
     font-weight: bold;
+    margin-bottom: -10px; /* Aproxima o label do campo */
 }
 
 form input[type="text"],
 form input[type="password"],
 form textarea,
 form select {
-    padding: 10px;
-    border: 1px solid #ddd;
+    padding: 12px;
+    border: 1px solid #ced4da;
     border-radius: 4px;
     width: 100%;
-    box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+form input:focus,
+form select:focus,
+form textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
 }
 
 form button {
     background-color: #007bff;
     color: white;
-    padding: 10px 15px;
+    padding: 12px 20px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    font-weight: bold;
     transition: background-color 0.3s ease;
+    align-self: flex-start; /* Alinha o botão à esquerda */
 }
 
 form button:hover {
     background-color: #0056b3;
 }
 
+/* Mensagens Flash (Alertas) */
 .messages {
     list-style: none;
     padding: 0;
-    margin-bottom: 20px;
+    margin: 0 0 30px 0;
 }
 
 .messages li {
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
     border-radius: 4px;
+    border: 1px solid transparent;
 }
 
 .messages .success {
     background-color: #d4edda;
     color: #155724;
-    border: 1px solid #c3e6cb;
+    border-color: #c3e6cb;
 }
 
 .messages .danger {
     background-color: #f8d7da;
     color: #721c24;
-    border: 1px solid #f5c6cb;
+    border-color: #f5c6cb;
 }
 
 .messages .info {
     background-color: #d1ecf1;
     color: #0c5460;
-    border: 1px solid #bee5eb;
+    border-color: #bee5eb;
 }
 
+/* Tabelas */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
 table th, table td {
-    border: 1px solid #ddd;
-    padding: 10px;
+    border: 1px solid #dee2e6;
+    padding: 12px;
     text-align: left;
+    vertical-align: middle;
 }
 
 table th {
-    background-color: #f2f2f2;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
 }
 
+table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02); /* Linhas alternadas */
+}
+
+table tbody tr:hover {
+    background-color: #e9ecef; /* Efeito ao passar o mouse */
+}
+
+/* Botões de Ação nas Tabelas */
 .actions {
     display: flex;
-    gap: 5px;
+    gap: 8px;
+    align-items: center;
 }
 
 .actions a, .actions button {
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 4px;
     text-decoration: none;
     font-size: 0.9em;
     cursor: pointer;
+    border: none;
+    transition: opacity 0.3s ease;
+    color: white;
+    text-align: center;
 }
 
 .actions a.edit {
-    background-color: #ffc107;
-    color: #333;
-    border: none;
+    background-color: #ffc107; /* Amarelo */
+    color: #212529;
 }
 
 .actions button.delete {
-    background-color: #dc3545;
-    color: white;
-    border: none;
+    background-color: #dc3545; /* Vermelho */
 }
 
 .actions a:hover, .actions button:hover {
-    opacity: 0.9;
+    opacity: 0.8;
 }
 
+/* Navegação do Admin */
 .admin-nav {
     text-align: center;
-    margin-top: 20px;
+    margin: -20px 0 30px 0;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #dee2e6;
 }
 
 .admin-nav a {
-    background-color: #6c757d;
+    background-color: #6c757d; /* Cinza escuro */
     color: white;
-    padding: 8px 15px;
+    padding: 10px 18px;
     border-radius: 4px;
     text-decoration: none;
-    margin: 0 5px;
+    margin: 0 8px;
+    transition: background-color 0.3s ease;
 }
 
 .admin-nav a:hover {
     background-color: #5a6268;
+}
+
+/* Estilo dos Checkboxes em `manage_stores.html` */
+.department-checkboxes {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.department-checkboxes label {
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    width: 1.3em;
+    height: 1.3em;
+    cursor: pointer;
 }

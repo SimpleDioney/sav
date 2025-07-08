@@ -14,7 +14,7 @@
                 <a href="{{ url_for('super_admin_dashboard') }}">Dashboard Super Admin</a>
             {% endif %}
             {% if session.store_name %}
-        <span style="color: gray; margin: 0 10px; font-weight: bold;">Empresa: {{ session.store_name }}</span>
+        <span style="color: gray; margin: 0 10px; font-weight: bold;">EMPRESA: {{ session.store_name }}</span>
     {% endif %}
             <a href="{{ url_for('admin_logout') }}">Sair</a>
         </div>
@@ -31,7 +31,7 @@
 
         <p>Bem-vindo ao Painel do Departamento de RH. As funcionalidades de adição e visualização de arquivos serão implementadas aqui.</p>
         
-        {# Formulário e tabela para dados de RH virão aqui #}
+        
 
         <p style="text-align: center; margin-top: 20px;"><a href="{{ url_for('admin_login') }}">Voltar para Login</a></p>
     </div>
