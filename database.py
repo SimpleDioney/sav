@@ -164,6 +164,21 @@ def init_db():
         else:
             raise
 
+    # Tabela de Log de Auditoria
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            username TEXT,
+            action TEXT NOT NULL,
+            target_type TEXT,
+            target_id INTEGER,
+            target_name TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
 
     # Adiciona um usuário SUPER ADMIN padrão SE NÃO EXISTIR
     cursor.execute("SELECT * FROM users WHERE username = 'Dioney'")
@@ -191,6 +206,7 @@ def reset_db():
     cursor.execute('DROP TABLE IF EXISTS cobranca_fichas_acerto')
     cursor.execute('DROP TABLE IF EXISTS rh_dados')
     cursor.execute('DROP TABLE IF EXISTS stores') # Exclui a tabela de lojas por último
+    cursor.execute('DROP TABLE IF EXISTS audit_log')
     conn.close()
     
     # Recria o banco do zero

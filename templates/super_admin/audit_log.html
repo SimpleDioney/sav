@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Log de Auditoria{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="admin-nav">
+        <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+    </div>
+
+    <h2><i class="fas fa-history"></i> Log de Auditoria</h2>
+    <div class="table-wrapper">
+        {% if logs %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Usuário</th>
+                        <th>Ação</th>
+                        <th>Tipo do Alvo</th>
+                        <th>ID do Alvo</th>
+                        <th>Nome do Alvo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>{{ log.id }}</td>
+                            <td>{{ log.timestamp }}</td>
+                            <td>{{ log.username }} (ID: {{ log.user_id }})</td>
+                            <td>{{ log.action | replace('_', ' ') | title }}</td>
+                            <td>{{ log.target_type | replace('_', ' ') | title if log.target_type else 'N/A' }}</td>
+                            <td>{{ log.target_id or 'N/A' }}</td>
+                            <td>{{ log.target_name or 'N/A' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhum registro de auditoria encontrado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

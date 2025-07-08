@@ -11,6 +11,15 @@ app.secret_key = '09164Duque!Paprika'
 # Inicializa o banco de dados com o app Flask
 init_app(app)
 
+# --- Funções de Auditoria ---
+def log_action(action, target_type=None, target_id=None, target_name=None):
+    db = get_db()
+    db.execute(
+        "INSERT INTO audit_log (user_id, username, action, target_type, target_id, target_name) VALUES (?, ?, ?, ?, ?, ?)",
+        (session.get('user_id'), session.get('username'), action, target_type, target_id, target_name)
+    )
+    db.commit()
+
 # --- Decoradores de Permissão ---
 
 def login_required(f):
@@ -84,10 +93,12 @@ def admin_login():
         
         if user and check_password_hash(user['password'], password):
             session['logged_in'] = True
+            session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
             session['store_id'] = user['store_id']
             session['store_name'] = user['store_name']
+            log_action('login')
             flash(f'Login realizado com sucesso!', 'success')
             
             if user['role'] == 'super_admin': return redirect(url_for('super_admin_dashboard'))
@@ -103,6 +114,7 @@ def admin_login():
 @app.route('/admin/logout')
 @login_required
 def admin_logout():
+    log_action('logout')
     session.clear()
     flash('Você foi desconectado.', 'info')
     return redirect(url_for('admin_login'))
@@ -114,6 +126,15 @@ def admin_logout():
 @role_required(['super_admin'])
 def super_admin_dashboard():
     return render_template('super_admin/super_admin_dashboard.html')
+
+@app.route('/super_admin/audit_log')
+@login_required
+@role_required(['super_admin'])
+def audit_log():
+    db = get_db()
+    logs = db.execute("SELECT * FROM audit_log ORDER BY timestamp DESC").fetchall()
+    return render_template('super_admin/audit_log.html', logs=logs)
+
 
 @app.route('/super_admin/users', methods=['GET', 'POST'])
 @login_required
@@ -133,9 +154,12 @@ def user_management():
         else:
             try:
                 hashed_password = generate_password_hash(password)
-                db.execute("INSERT INTO users (username, password, role, can_add_users, store_id) VALUES (?, ?, ?, ?, ?)",
+                cursor = db.cursor()
+                cursor.execute("INSERT INTO users (username, password, role, can_add_users, store_id) VALUES (?, ?, ?, ?, ?)",
                            (username, hashed_password, role, can_add_users, store_id))
+                new_user_id = cursor.lastrowid
                 db.commit()
+                log_action('create_user', target_id=new_user_id, target_name=username)
                 flash(f'Usuário {username} criado com sucesso!', 'success')
             except sqlite3.IntegrityError:
                 flash(f'Erro: Usuário "{username}" já existe.', 'danger')
@@ -150,13 +174,16 @@ def user_management():
 @role_required(['super_admin'])
 def delete_user(user_id):
     db = get_db()
-    user_to_delete = db.execute("SELECT role FROM users WHERE id = ?", (user_id,)).fetchone()
+    user_to_delete = db.execute("SELECT username, role FROM users WHERE id = ?", (user_id,)).fetchone()
     if user_to_delete and user_to_delete['role'] == 'super_admin':
         flash('Não é possível excluir um Super Admin.', 'danger')
-    else:
+    elif user_to_delete:
         db.execute("DELETE FROM users WHERE id = ?", (user_id,))
         db.commit()
+        log_action('delete_user', target_id=user_id, target_name=user_to_delete['username'])
         flash('Usuário excluído com sucesso!', 'success')
+    else:
+        flash('Usuário não encontrado.', 'danger')
     return redirect(url_for('user_management'))
 
 @app.route('/super_admin/stores', methods=['GET', 'POST'])
@@ -179,6 +206,7 @@ def manage_stores():
                 for dept_role in selected_departments:
                     cursor.execute("INSERT INTO store_departments (store_id, department_role) VALUES (?, ?)", (store_id, dept_role))
                 db.commit()
+                log_action('create_store', target_id=store_id, target_name=store_name)
                 flash(f'EMPRESA "{store_name}" criada com sucesso!', 'success')
             except sqlite3.IntegrityError:
                 flash(f'Erro: A EMPRESA "{store_name}" já existe.', 'danger')
@@ -197,10 +225,15 @@ def manage_stores():
 @role_required(['super_admin'])
 def delete_store(store_id):
     db = get_db()
-    db.execute("UPDATE users SET store_id = NULL WHERE store_id = ?", (store_id,))
-    db.execute("DELETE FROM stores WHERE id = ?", (store_id,))
-    db.commit()
-    flash('EMPRESA excluída com sucesso!', 'success')
+    store_to_delete = db.execute("SELECT name FROM stores WHERE id = ?", (store_id,)).fetchone()
+    if store_to_delete:
+        db.execute("UPDATE users SET store_id = NULL WHERE store_id = ?", (store_id,))
+        db.execute("DELETE FROM stores WHERE id = ?", (store_id,))
+        db.commit()
+        log_action('delete_store', target_id=store_id, target_name=store_to_delete['name'])
+        flash('EMPRESA excluída com sucesso!', 'success')
+    else:
+        flash('EMPRESA não encontrada.', 'danger')
     return redirect(url_for('manage_stores'))
 
 # --- Rotas PATRIMÔNIO ---
@@ -220,9 +253,13 @@ def patrimonio_dashboard():
         else:
             store_id = session.get('store_id')
 
-        form_data = (request.form['codigo_cliente'], request.form['nome_cliente'], request.form['patrimonios'], request.form['numero_caixa'], store_id)
-        db.execute("INSERT INTO patrimonios (codigo_cliente, nome_cliente, patrimonios, numero_caixa, store_id) VALUES (?, ?, ?, ?, ?)", form_data)
+        codigo_cliente = request.form['codigo_cliente']
+        form_data = (codigo_cliente, request.form['nome_cliente'], request.form['patrimonios'], request.form['numero_caixa'], store_id)
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO patrimonios (codigo_cliente, nome_cliente, patrimonios, numero_caixa, store_id) VALUES (?, ?, ?, ?, ?)", form_data)
+        new_id = cursor.lastrowid
         db.commit()
+        log_action('add_patrimonio', target_id=new_id, target_name=f"Cliente {codigo_cliente}")
         flash('Patrimônio adicionado com sucesso!', 'success')
         return redirect(url_for('patrimonio_dashboard'))
 
@@ -247,9 +284,11 @@ def patrimonio_edit(item_id):
         return redirect(url_for('patrimonio_dashboard'))
 
     if request.method == 'POST':
-        form_data = (request.form['codigo_cliente'], request.form['nome_cliente'], request.form['patrimonios'], request.form['numero_caixa'], item_id)
+        codigo_cliente = request.form['codigo_cliente']
+        form_data = (codigo_cliente, request.form['nome_cliente'], request.form['patrimonios'], request.form['numero_caixa'], item_id)
         db.execute("UPDATE patrimonios SET codigo_cliente = ?, nome_cliente = ?, patrimonios = ?, numero_caixa = ? WHERE id = ?", form_data)
         db.commit()
+        log_action('edit_patrimonio', target_id=item_id, target_name=f"Cliente {codigo_cliente}")
         flash('Patrimônio atualizado com sucesso!', 'success')
         return redirect(url_for('patrimonio_dashboard'))
         
@@ -260,12 +299,13 @@ def patrimonio_edit(item_id):
 @role_required(['super_admin', 'admin_patrimonio'])
 def patrimonio_delete(item_id):
     db = get_db()
-    item = db.execute("SELECT store_id FROM patrimonios WHERE id = ?", (item_id,)).fetchone()
+    item = db.execute("SELECT store_id, codigo_cliente FROM patrimonios WHERE id = ?", (item_id,)).fetchone()
     if not item or (session['role'] != 'super_admin' and item['store_id'] != session.get('store_id')):
         flash('Patrimônio não encontrado ou sem permissão para excluir.', 'danger')
     else:
         db.execute("DELETE FROM patrimonios WHERE id = ?", (item_id,))
         db.commit()
+        log_action('delete_patrimonio', target_id=item_id, target_name=f"Cliente {item['codigo_cliente']}")
         flash('Patrimônio excluído com sucesso!', 'success')
     return redirect(url_for('patrimonio_dashboard'))
 
@@ -293,9 +333,13 @@ def contas_a_pagar_dashboard():
         else:
             store_id = session.get('store_id')
             
-        form_data = (request.form['pagamento_data_inicio'], request.form['pagamento_data_fim'], request.form['caixa'], store_id)
-        db.execute("INSERT INTO contas_a_pagar_pagamentos (pagamento_data_inicio, pagamento_data_fim, caixa, store_id) VALUES (?, ?, ?, ?)", form_data)
+        caixa = request.form['caixa']
+        form_data = (request.form['pagamento_data_inicio'], request.form['pagamento_data_fim'], caixa, store_id)
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO contas_a_pagar_pagamentos (pagamento_data_inicio, pagamento_data_fim, caixa, store_id) VALUES (?, ?, ?, ?)", form_data)
+        new_id = cursor.lastrowid
         db.commit()
+        log_action('add_pagamento', target_id=new_id, target_name=f"Caixa {caixa}")
         flash('Pagamento adicionado com sucesso!', 'success'
               )
         return redirect(url_for('contas_a_pagar_dashboard'))
@@ -333,9 +377,11 @@ def contas_a_pagar_pagamentos_edit(item_id):
         return redirect(url_for('contas_a_pagar_dashboard'))
 
     if request.method == 'POST':
-        form_data = (request.form['pagamento_data_inicio'], request.form['pagamento_data_fim'], request.form['caixa'], item_id)
+        caixa = request.form['caixa']
+        form_data = (request.form['pagamento_data_inicio'], request.form['pagamento_data_fim'], caixa, item_id)
         db.execute("UPDATE contas_a_pagar_pagamentos SET pagamento_data_inicio = ?, pagamento_data_fim = ?, caixa = ? WHERE id = ?", form_data)
         db.commit()
+        log_action('edit_pagamento', target_id=item_id, target_name=f"Caixa {caixa}")
         flash('Registro atualizado com sucesso!', 'success')
         return redirect(url_for('contas_a_pagar_dashboard'))
         
@@ -346,12 +392,13 @@ def contas_a_pagar_pagamentos_edit(item_id):
 @role_required(['super_admin', 'admin_contas_a_pagar'])
 def contas_a_pagar_pagamentos_delete(item_id):
     db = get_db()
-    item = db.execute("SELECT store_id FROM contas_a_pagar_pagamentos WHERE id = ?", (item_id,)).fetchone()
+    item = db.execute("SELECT store_id, caixa FROM contas_a_pagar_pagamentos WHERE id = ?", (item_id,)).fetchone()
     if not item or (session['role'] != 'super_admin' and item['store_id'] != session.get('store_id')):
         flash('Registro não encontrado ou sem permissão para excluir.', 'danger')
     else:
         db.execute("DELETE FROM contas_a_pagar_pagamentos WHERE id = ?", (item_id,))
         db.commit()
+        log_action('delete_pagamento', target_id=item_id, target_name=f"Caixa {item['caixa']}")
         flash('Registro excluído com sucesso!', 'success')
     return redirect(url_for('contas_a_pagar_dashboard'))
 
@@ -371,8 +418,12 @@ def documentos_diversos_dashboard():
         else:
             store_id = session.get('store_id')
 
-        db.execute("INSERT INTO contas_a_pagar_diversos (numero_caixa, store_id) VALUES (?, ?)", (request.form['numero_caixa'], store_id))
+        numero_caixa = request.form['numero_caixa']
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO contas_a_pagar_diversos (numero_caixa, store_id) VALUES (?, ?)", (numero_caixa, store_id))
+        new_id = cursor.lastrowid
         db.commit()
+        log_action('add_documento_diverso', target_id=new_id, target_name=f"Caixa {numero_caixa}")
         flash('Documento diverso adicionado com sucesso!', 'success')
         return redirect(url_for('documentos_diversos_dashboard'))
 
@@ -397,8 +448,10 @@ def contas_a_pagar_diversos_edit(item_id):
         return redirect(url_for('documentos_diversos_dashboard'))
 
     if request.method == 'POST':
-        db.execute("UPDATE contas_a_pagar_diversos SET numero_caixa = ? WHERE id = ?", (request.form['numero_caixa'], item_id))
+        numero_caixa = request.form['numero_caixa']
+        db.execute("UPDATE contas_a_pagar_diversos SET numero_caixa = ? WHERE id = ?", (numero_caixa, item_id))
         db.commit()
+        log_action('edit_documento_diverso', target_id=item_id, target_name=f"Caixa {numero_caixa}")
         flash('Documento atualizado com sucesso!', 'success')
         return redirect(url_for('documentos_diversos_dashboard'))
 
@@ -409,12 +462,13 @@ def contas_a_pagar_diversos_edit(item_id):
 @role_required(['super_admin', 'admin_contas_a_pagar'])
 def contas_a_pagar_diversos_delete(item_id):
     db = get_db()
-    item = db.execute("SELECT store_id FROM contas_a_pagar_diversos WHERE id = ?", (item_id,)).fetchone()
+    item = db.execute("SELECT store_id, numero_caixa FROM contas_a_pagar_diversos WHERE id = ?", (item_id,)).fetchone()
     if not item or (session['role'] != 'super_admin' and item['store_id'] != session.get('store_id')):
         flash('Documento não encontrado ou sem permissão para excluir.', 'danger')
     else:
         db.execute("DELETE FROM contas_a_pagar_diversos WHERE id = ?", (item_id,))
         db.commit()
+        log_action('delete_documento_diverso', target_id=item_id, target_name=f"Caixa {item['numero_caixa']}")
         flash('Documento excluído com sucesso!', 'success')
     return redirect(url_for('documentos_diversos_dashboard'))
 
@@ -435,15 +489,19 @@ def cobranca_dashboard():
             store_id = session.get('store_id')
             
         try:
+            ficha_acerto = request.form['ficha_acerto']
             form_data = (
-                request.form['ficha_acerto'],
+                ficha_acerto,
                 request.form['caixa'],
                 int(request.form['range_cliente_inicio']),
                 int(request.form['range_cliente_fim']),
                 store_id
             )
-            db.execute("INSERT INTO cobranca_fichas_acerto (ficha_acerto, caixa, range_cliente_inicio, range_cliente_fim, store_id) VALUES (?, ?, ?, ?, ?)", form_data)
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO cobranca_fichas_acerto (ficha_acerto, caixa, range_cliente_inicio, range_cliente_fim, store_id) VALUES (?, ?, ?, ?, ?)", form_data)
+            new_id = cursor.lastrowid
             db.commit()
+            log_action('add_ficha_acerto', target_id=new_id, target_name=f"Ficha {ficha_acerto}")
             flash('Ficha de Acerto adicionada com sucesso!', 'success')
         except ValueError:
             flash('Os campos de range de cliente devem ser números.', 'danger')
@@ -471,8 +529,9 @@ def cobranca_fichas_acerto_edit(item_id):
 
     if request.method == 'POST':
         try:
+            ficha_acerto = request.form['ficha_acerto']
             form_data = (
-                request.form['ficha_acerto'],
+                ficha_acerto,
                 request.form['caixa'],
                 int(request.form['range_cliente_inicio']),
                 int(request.form['range_cliente_fim']),
@@ -480,6 +539,7 @@ def cobranca_fichas_acerto_edit(item_id):
             )
             db.execute("UPDATE cobranca_fichas_acerto SET ficha_acerto = ?, caixa = ?, range_cliente_inicio = ?, range_cliente_fim = ? WHERE id = ?", form_data)
             db.commit()
+            log_action('edit_ficha_acerto', target_id=item_id, target_name=f"Ficha {ficha_acerto}")
             flash('Ficha de Acerto atualizada com sucesso!', 'success')
         except ValueError:
             flash('Os campos de range de cliente devem ser números.', 'danger')
@@ -492,14 +552,15 @@ def cobranca_fichas_acerto_edit(item_id):
 @role_required(['super_admin', 'admin_cobranca'])
 def cobranca_fichas_acerto_delete(item_id):
     db = get_db()
-    item = db.execute("SELECT store_id FROM cobranca_fichas_acerto WHERE id = ?", (item_id,)).fetchone()
+    item = db.execute("SELECT store_id, ficha_acerto FROM cobranca_fichas_acerto WHERE id = ?", (item_id,)).fetchone()
     if not item or (session['role'] != 'super_admin' and item['store_id'] != session.get('store_id')):
         flash('Ficha de Acerto não encontrada ou sem permissão para excluir.', 'danger')
     else:
         db.execute("DELETE FROM cobranca_fichas_acerto WHERE id = ?", (item_id,))
         db.commit()
+        log_action('delete_ficha_acerto', target_id=item_id, target_name=f"Ficha {item['ficha_acerto']}")
         flash('Ficha de Acerto excluída com sucesso!', 'success')
     return redirect(url_for('cobranca_dashboard'))
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000)
+    app.run()
