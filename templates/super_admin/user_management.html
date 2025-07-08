@@ -6,7 +6,7 @@
 <div class="card">
     <div class="admin-nav">
         <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
-        <a href="{{ url_for('manage_stores') }}"><i class="fas fa-store-alt"></i> Gerenciar EMPRESAS</a>
+        <a href="{{ url_for('manage_stores') }}"><i class="fas fa-store-alt"></i> Gerenciar empresas</a>
     </div>
 
     <h2><i class="fas fa-user-plus"></i> Criar Novo Usuário</h2>
@@ -27,7 +27,7 @@
                 <option value="super_admin">Super Admin</option>
             </select>
 
-            <label for="store_id">EMPRESA:</label>
+            <label for="store_id">Empresa:</label>
             <select id="store_id" name="store_id">
                 <option value="">Nenhuma</option>
                 {% for store in stores %}
@@ -53,7 +53,7 @@
                         <th>ID</th>
                         <th>Usuário</th>
                         <th>Função</th>
-                        <th>EMPRESA</th>
+                        <th>Empresa</th>
                         <th>Pode Criar?</th>
                         <th>Ações</th>
                     </tr>

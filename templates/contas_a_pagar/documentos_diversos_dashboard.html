@@ -13,9 +13,9 @@
     <div class="form-section">
         <form action="{{ url_for('documentos_diversos_dashboard') }}" method="POST">
             {% if session.role == 'super_admin' %}
-            <label for="store_id">EMPRESA:</label>
+            <label for="store_id">Empresa:</label>
             <select id="store_id" name="store_id" required>
-                <option value="">Selecione uma EMPRESA</option>
+                <option value="">Selecione uma empresa</option>
                 {% for store in stores %}
                     <option value="{{ store.id }}">{{ store.name }}</option>
                 {% endfor %}
@@ -36,7 +36,7 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        {% if session.role == 'super_admin' %}<th>EMPRESA</th>{% endif %}
+                        {% if session.role == 'super_admin' %}<th>Empresa</th>{% endif %}
                         <th>Número da Caixa</th>
                         <th>Ações</th>
                     </tr>
