@@ -44,6 +44,7 @@
     
     <div class="in-page-search">
         <input type="text" id="table-search" onkeyup="filterTable()" placeholder="Buscar na tabela...">
+        <a href="{{ url_for('patrimonio_export_csv') }}" class="export-button"><i class="fas fa-file-csv"></i> Exportar para CSV</a>
     </div>
 
     <div class="table-wrapper">
@@ -87,4 +88,7 @@
             <p>Nenhum patrimônio cadastrado ainda.</p>
         {% endif %}
     </div>
+
+    {% include '_pagination.html' %}
+    
 {% endblock %}

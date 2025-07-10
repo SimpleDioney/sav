@@ -1,0 +1,31 @@
+{% if total_pages > 1 %}
+<div class="pagination">
+    
+    {# Copia os argumentos da URL atual e remove o 'page' para evitar duplicidade #}
+    {% set new_args = request.args.copy() %}
+    {% do new_args.pop('page', None) %}
+
+    <!-- Link para a página anterior -->
+    {% if page > 1 %}
+        <a href="{{ url_for(request.endpoint, page=page-1, **new_args) }}">&laquo; Anterior</a>
+    {% else %}
+        <span class="disabled">&laquo; Anterior</span>
+    {% endif %}
+
+    <!-- Links para as páginas -->
+    {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+            <span class="current">{{ p }}</span>
+        {% else %}
+            <a href="{{ url_for(request.endpoint, page=p, **new_args) }}">{{ p }}</a>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Link para a próxima página -->
+    {% if page < total_pages %}
+        <a href="{{ url_for(request.endpoint, page=page+1, **new_args) }}">Próximo &raquo;</a>
+    {% else %}
+        <span class="disabled">Próximo &raquo;</span>
+    {% endif %}
+</div>
+{% endif %}

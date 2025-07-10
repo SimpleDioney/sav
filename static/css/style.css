@@ -59,6 +59,33 @@ h2 {
     margin-bottom: 30px;
 }
 
+/* --- Cabeçalho e Menu do Usuário --- */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.user-menu .user-greeting {
+    font-weight: 500;
+}
+.user-menu a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--transition-speed);
+}
+.user-menu a:hover {
+    color: var(--primary-color);
+}
+
+
 /* --- Navegação --- */
 .admin-nav {
     display: flex;
@@ -161,6 +188,7 @@ table th {
 table td {
     padding: 15px;
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
 
 table tbody tr:last-child td {
@@ -189,6 +217,30 @@ table tbody tr:hover {
 .actions .edit { color: var(--warning-color); }
 .actions .delete { color: var(--danger-color); }
 
+/* --- Ações do Dashboard (Busca e Exportação) --- */
+.dashboard-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.export-button {
+    background: var(--success-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color var(--transition-speed), transform var(--transition-speed);
+}
+.export-button:hover {
+    background: #27ae60;
+    transform: translateY(-2px);
+}
+
 /* --- Mensagens Flash --- */
 .messages { list-style: none; padding: 0; margin: 0 0 20px 0; }
 .messages li {
@@ -202,111 +254,12 @@ table tbody tr:hover {
 .messages .success { background: var(--success-color); }
 .messages .danger { background: var(--danger-color); }
 .messages .info { background: var(--secondary-color); }
+.messages .warning { background: var(--warning-color); color: var(--secondary-color); }
 
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 25px;
-    margin-top: 20px;
-}
-
-.dashboard-card {
-    background: var(--card-bg-color);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    text-align: center;
-    text-decoration: none;
-    color: var(--secondary-color);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    border-bottom: 4px solid var(--border-color);
-    transition: all var(--transition-speed) ease;
-}
-
-.dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    border-color: var(--primary-color);
-}
-
-.dashboard-card .icon {
-    font-size: 3rem;
-    color: var(--primary-color);
-    margin-bottom: 15px;
-    transition: transform var(--transition-speed) ease;
-}
-
-.dashboard-card:hover .icon {
-    transform: scale(1.1);
-}
-
-.dashboard-card span {
-    font-size: 1.1rem;
-    font-weight: 600;
-    display: block;
-}
-
-.department-checkboxes {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    background-color: transparent;
-    border: none;
-    padding: 0;
-}
-
-.department-checkboxes label {
-    background-color: #f8f9fa;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 15px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 500;
-    transition: all var(--transition-speed) ease;
-}
-
-.department-checkboxes input[type="checkbox"] {
-    display: none;
-}
-
-.department-checkboxes input[type="checkbox"] + .checkbox-custom-display {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border-color);
-    border-radius: 4px;
-    display: inline-block;
-    position: relative;
-    transition: all var(--transition-speed) ease;
-}
-
-.department-checkboxes input[type="checkbox"]:checked + .checkbox-custom-display {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.department-checkboxes input[type="checkbox"]:checked + .checkbox-custom-display::after {
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 2px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 3px 3px 0;
-    transform: rotate(45deg);
-}
-
-.department-checkboxes label:hover {
-    border-color: var(--primary-color);
-    background-color: #fff;
-}
-
-/* --- [NOVO] BUSCA INTERNA NA PÁGINA --- */
+/* --- Busca Interna na Página --- */
 .in-page-search {
-    margin-bottom: 20px;
     max-width: 450px;
+    flex-grow: 1;
 }
 
 .in-page-search input {
@@ -325,8 +278,7 @@ table tbody tr:hover {
     outline: none;
 }
 
-
-/* --- [NOVO] DRAG AND DROP (ARRASTAR E SOLTAR) --- */
+/* --- Drag and Drop (Arrastar e Soltar) --- */
 .drag-handle {
     width: 40px;
     text-align: center;
@@ -340,13 +292,46 @@ table tbody tr:hover {
     color: var(--primary-color);
 }
 
-/* Estilo para o item "fantasma" que aparece durante o arrasto */
 .sortable-ghost {
     background-color: #d1e9f9;
     opacity: 0.7;
 }
 
-/* Quando um item está sendo arrastado, o cursor muda */
 .sortable-chosen .drag-handle {
     cursor: grabbing;
+}
+
+/* --- [NOVO] Paginação --- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    gap: 5px;
+}
+
+.pagination a, .pagination span {
+    color: var(--primary-color);
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+}
+
+.pagination a:hover {
+    background-color: #ddd;
+}
+
+.pagination .current {
+    background-color: var(--primary-color);
+    color: white;
+    border: 1px solid var(--primary-color);
+}
+
+.pagination .disabled {
+    color: #aaa;
+    pointer-events: none;
+    border-color: #ddd;
 }

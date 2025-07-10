@@ -127,6 +127,8 @@ def init_db():
         cursor.execute("ALTER TABLE rh_dados ADD COLUMN store_id INTEGER REFERENCES stores(id)")
     except sqlite3.OperationalError: pass
 
+
+    # --- TABELA DE AUDITORIA ATUALIZADA ---
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS audit_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -136,11 +138,21 @@ def init_db():
             target_type TEXT,
             target_id INTEGER,
             target_name TEXT,
+            dados_antigos TEXT,
+            dados_novos TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
+    # Adiciona novas colunas de forma segura
+    try:
+        cursor.execute("ALTER TABLE audit_log ADD COLUMN dados_antigos TEXT")
+        cursor.execute("ALTER TABLE audit_log ADD COLUMN dados_novos TEXT")
+    except sqlite3.OperationalError:
+        pass
 
+
+    # Adiciona um usuário SUPER ADMIN padrão SE NÃO EXISTIR
     cursor.execute("SELECT * FROM users WHERE username = 'Dioney'")
     if cursor.fetchone() is None:
         hashed_password = generate_password_hash('Dioney13')
