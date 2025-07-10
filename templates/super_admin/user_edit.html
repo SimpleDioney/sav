@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuário{% endblock %}
+
+{% block content %}
+<div class="admin-nav">
+    <a href="{{ url_for('user_management') }}"><i class="fas fa-arrow-left"></i> Voltar para Gerenciamento de Usuários</a>
+</div>
+
+<h2><i class="fas fa-user-edit"></i> Editar Usuário: {{ user.username }}</h2>
+
+<div class="form-section">
+    <form action="{{ url_for('user_edit', user_id=user.id) }}" method="POST">
+        
+        <label for="role">Departamento/Função:</label>
+        <select id="role" name="role" required>
+            <option value="admin_patrimonio" {% if user.role == 'admin_patrimonio' %}selected{% endif %}>Admin Patrimônio</option>
+            <option value="admin_rh" {% if user.role == 'admin_rh' %}selected{% endif %}>Admin RH</option>
+            <option value="admin_contas_a_pagar" {% if user.role == 'admin_contas_a_pagar' %}selected{% endif %}>Admin Contas a Pagar</option>
+            <option value="admin_cobranca" {% if user.role == 'admin_cobranca' %}selected{% endif %}>Admin Cobrança</option>
+            <option value="super_admin" {% if user.role == 'super_admin' %}selected{% endif %}>Super Admin</option>
+        </select>
+
+        <label for="store_id">Empresa:</label>
+        <select id="store_id" name="store_id">
+            <option value="">Nenhuma</option>
+            {% for store in stores %}
+                <option value="{{ store.id }}" {% if store.id == user.store_id %}selected{% endif %}>{{ store.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label class="inline-checkbox">
+            <input type="checkbox" name="can_add_users" {% if user.can_add_users %}checked{% endif %}>
+            <span class="checkbox-custom-display"></span>
+            <span>Permitir que este usuário crie outros usuários</span>
+        </label>
+        
+        <hr>
+
+        <label for="new_password">Nova Senha (deixe em branco para não alterar):</label>
+        <input type="password" id="new_password" name="new_password" placeholder="Mínimo 6 caracteres">
+
+        <button type="submit" class="button-save"><i class="fas fa-save"></i> Salvar Alterações</button>
+    </form>
+</div>
+{% endblock %}

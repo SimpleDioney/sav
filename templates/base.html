@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
-<body>
+<body data-is-super-admin="{{ 'true' if session.role == 'super_admin' else 'false' }}" {% block body_attributes %}{% endblock %}>
     <div class="container">
         <header class="main-header">
             <h1><i class="fas fa-archive"></i> ARQUIVOS</h1>
@@ -20,8 +20,9 @@
             </div>
             {% endif %}
         </header>
-
-        <div class="card">
+        
+        <div class="messages-wrapper">
+            {# As mensagens flash serão inseridas aqui pelo JavaScript #}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     <ul class="messages">
@@ -31,13 +32,14 @@
                     </ul>
                 {% endif %}
             {% endwith %}
-
-            {% block content %}{% endblock %}
         </div>
+
+        <main class="card">
+            {% block content %}{% endblock %}
+        </main>
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     
-    <!-- [NOVO] Bloco para scripts específicos da página -->
     {% block scripts %}{% endblock %}
 </body>
 </html>

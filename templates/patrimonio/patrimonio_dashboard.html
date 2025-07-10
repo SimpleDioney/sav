@@ -14,7 +14,7 @@
     </div>
 
     <h2><i class="fas fa-box"></i> Adicionar Novo Patrimônio</h2>
-    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST" class="form-section">
+    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST" class="form-section" data-is-ajax="true" data-page-type="patrimonio">
         {% if session.role == 'super_admin' %}
         <label for="store_id">Empresa:</label>
         <select id="store_id" name="store_id" required>
@@ -44,7 +44,7 @@
     
     <div class="in-page-search">
         <input type="text" id="table-search" onkeyup="filterTable()" placeholder="Buscar na tabela...">
-        <a href="{{ url_for('patrimonio_export_csv') }}" class="export-button"><i class="fas fa-file-csv"></i> Exportar para CSV</a>
+       
     </div>
 
     <div class="table-wrapper">
@@ -63,9 +63,9 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="patrimonio-table-body">
                     {% for item in patrimonios %}
-                        <tr>
+                        <tr data-id="{{ item.id }}">
                             <td>{{ item.id }}</td>
                             {% if session.role == 'super_admin' %}
                             <td>{{ item.store_name or 'N/A' }}</td>
@@ -76,7 +76,7 @@
                             <td>{{ item.numero_caixa }}</td>
                             <td class="actions">
                                 <a href="{{ url_for('patrimonio_edit', item_id=item.id) }}" title="Editar" class="edit"><i class="fas fa-edit"></i></a>
-                                <form action="{{ url_for('patrimonio_delete', item_id=item.id) }}" method="POST" style="display:inline;">
+                                <form action="{{ url_for('patrimonio_delete', item_id=item.id) }}" method="POST" style="display:inline;" data-is-ajax="true">
                                     <button type="submit" title="Excluir" class="delete"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

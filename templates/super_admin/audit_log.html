@@ -2,62 +2,75 @@
 {% block title %}Log de Auditoria{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="admin-nav">
-        <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+<div class="admin-nav">
+    <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+</div>
+
+<h2><i class="fas fa-history"></i> Log de Auditoria</h2>
+
+<form method="GET" action="{{ url_for('audit_log') }}" class="form-section filter-form">
+    <div class="filter-controls">
+        <input type="text" name="user_search" placeholder="Buscar por usuário..." value="{{ current_filters.user }}">
+        <select name="action_filter">
+            <option value="">Todas as Ações</option>
+            {% for action in distinct_actions %}
+                <option value="{{ action.action }}" {% if action.action == current_filters.action %}selected{% endif %}>{{ action.action | replace('_', ' ') | title }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Filtrar</button>
+        <a href="{{ url_for('audit_log') }}" class="clear-btn">Limpar</a>
     </div>
+</form>
 
-    <h2><i class="fas fa-history"></i> Log de Auditoria</h2>
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Usuário</th>
+                <th>Ação</th>
+                <th>Alvo</th>
+                <th>Dados Antigos</th>
+                <th>Dados Novos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+                {% set target_url = None %}
+                {% if log.target_type == 'user' and log.target_id %}
+                    {% set target_url = url_for('user_edit', user_id=log.target_id) %}
+                {% elif log.target_type == 'patrimonio' and log.target_id %}
+                    {% set target_url = url_for('patrimonio_edit', item_id=log.target_id) %}
+                {% elif log.target_type == 'ficha_acerto' and log.target_id %}
+                    {% set target_url = url_for('cobranca_fichas_acerto_edit', item_id=log.target_id) %}
+                {% elif log.target_type == 'pagamento' and log.target_id %}
+                    {% set target_url = url_for('contas_a_pagar_pagamentos_edit', item_id=log.target_id) %}
+                {% elif log.target_type == 'documento_diverso' and log.target_id %}
+                    {% set target_url = url_for('contas_a_pagar_diversos_edit', item_id=log.target_id) %}
+                {% endif %}
 
-    <form method="GET" action="{{ url_for('audit_log') }}" class="form-section filter-form">
-        <div class="filter-controls">
-            <input type="text" name="user_search" placeholder="Buscar por usuário..." value="{{ current_filters.user }}">
-            <select name="action_filter">
-                <option value="">Todas as Ações</option>
-                {% for action in distinct_actions %}
-                    <option value="{{ action.action }}" {% if action.action == current_filters.action %}selected{% endif %}>{{ action.action }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Filtrar</button>
-            <a href="{{ url_for('audit_log') }}" class="clear-btn">Limpar</a>
-        </div>
-    </form>
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
                 <tr>
-                    <th>Data/Hora</th>
-                    <th>Usuário</th>
-                    <th>Ação</th>
-                    <th>Alvo</th>
-                    <th>Dados Antigos</th>
-                    <th>Dados Novos</th>
+                    <td>{{ log.timestamp | datetime }}</td>
+                    <td>{{ log.username or 'Sistema' }}</td>
+                    <td><span class="action-tag">{{ log.action | replace('_', ' ') | title }}</span></td>
+                    <td>
+                        {% if log.target_id %}
+                            {% set is_deleted = 'delete' in log.action %}
+                            <a href="{{ target_url if target_url and not is_deleted else '#' }}" 
+                               class="{{ 'disabled-link' if is_deleted or not target_url else '' }}" 
+                               title="{{ 'Item excluído ou sem link' if is_deleted or not target_url else 'Ver item' }}">
+                                {{ log.target_type | replace('_', ' ') | title if log.target_type else 'N/A' }}: {{ log.target_name or log.target_id }}
+                            </a>
+                        {% else %}
+                            {{ log.target_name or 'N/A' }}
+                        {% endif %}
+                    </td>
+                    <td class="log-data">{{ log.dados_antigos | prettyjson | safe }}</td>
+                    <td class="log-data">{{ log.dados_novos | prettyjson | safe }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for log in logs %}
-                    <tr>
-                        <td>{{ log.timestamp }}</td>
-                        <td>{{ log.username or 'Sistema' }}</td>
-                        <td><span class="action-tag">{{ log.action }}</span></td>
-                        <td>
-                            {% if log.target_id %}
-                                {% set is_deleted = 'delete' in log.action %}
-                                <a href="#" class="{{ 'disabled-link' if is_deleted else '' }}" title="{{ 'Item excluído' if is_deleted else 'Ver item' }}">
-                                    {{ log.target_type | title }}: {{ log.target_name or log.target_id }}
-                                </a>
-                            {% else %}
-                                {{ log.target_name or 'N/A' }}
-                            {% endif %}
-                        </td>
-                        <td><pre>{{ log.dados_antigos | tojson(indent=2) if log.dados_antigos != 'null' }}</pre></td>
-                        <td><pre>{{ log.dados_novos | tojson(indent=2) if log.dados_novos != 'null' }}</pre></td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 {% include '_pagination.html' %}
