@@ -88,6 +88,10 @@ h2 {
 }
 
 /* --- Formulários --- */
+.form-section {
+    margin-bottom: 30px;
+}
+
 form {
     display: flex;
     flex-direction: column;
@@ -208,7 +212,7 @@ table tbody tr:hover {
 
 .dashboard-card {
     background: var(--card-bg-color);
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--border-radius);
     padding: 25px;
     text-align: center;
     text-decoration: none;
@@ -253,7 +257,7 @@ table tbody tr:hover {
 .department-checkboxes label {
     background-color: #f8f9fa;
     border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--border-radius);
     padding: 15px;
     cursor: pointer;
     display: flex;
@@ -264,12 +268,10 @@ table tbody tr:hover {
 }
 
 .department-checkboxes input[type="checkbox"] {
-    /* Esconde o checkbox padrão */
     display: none;
 }
 
 .department-checkboxes input[type="checkbox"] + .checkbox-custom-display {
-    /* Cria um novo display para o checkbox */
     width: 20px;
     height: 20px;
     border: 2px solid var(--border-color);
@@ -284,7 +286,6 @@ table tbody tr:hover {
     border-color: var(--primary-color);
 }
 
-/* Adiciona o "check" quando selecionado */
 .department-checkboxes input[type="checkbox"]:checked + .checkbox-custom-display::after {
     content: '';
     position: absolute;
@@ -300,4 +301,52 @@ table tbody tr:hover {
 .department-checkboxes label:hover {
     border-color: var(--primary-color);
     background-color: #fff;
+}
+
+/* --- [NOVO] BUSCA INTERNA NA PÁGINA --- */
+.in-page-search {
+    margin-bottom: 20px;
+    max-width: 450px;
+}
+
+.in-page-search input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: all var(--transition-speed);
+}
+
+.in-page-search input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+
+
+/* --- [NOVO] DRAG AND DROP (ARRASTAR E SOLTAR) --- */
+.drag-handle {
+    width: 40px;
+    text-align: center;
+    cursor: grab;
+    color: #95a5a6;
+    font-size: 1.2rem;
+    transition: color 0.2s;
+}
+
+.drag-handle:hover {
+    color: var(--primary-color);
+}
+
+/* Estilo para o item "fantasma" que aparece durante o arrasto */
+.sortable-ghost {
+    background-color: #d1e9f9;
+    opacity: 0.7;
+}
+
+/* Quando um item está sendo arrastado, o cursor muda */
+.sortable-chosen .drag-handle {
+    cursor: grabbing;
 }

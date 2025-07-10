@@ -3,7 +3,6 @@
 {% block title %}Painel Patrimônio{% endblock %}
 
 {% block content %}
-
     <div class="admin-nav">
         {% if session.store_name %}
             <span class="store-info"><i class="fas fa-store"></i> {{ session.store_name }}</span>
@@ -15,10 +14,7 @@
     </div>
 
     <h2><i class="fas fa-box"></i> Adicionar Novo Patrimônio</h2>
-    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST">
-        
-        {# --- CORREÇÃO ADICIONADA AQUI --- #}
-        {# Se o usuário for Super Admin, mostra o seletor de empresas. #}
+    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST" class="form-section">
         {% if session.role == 'super_admin' %}
         <label for="store_id">Empresa:</label>
         <select id="store_id" name="store_id" required>
@@ -45,6 +41,11 @@
     </form>
 
     <h2><i class="fas fa-boxes"></i> Patrimônios Existentes</h2>
+    
+    <div class="in-page-search">
+        <input type="text" id="table-search" onkeyup="filterTable()" placeholder="Buscar na tabela...">
+    </div>
+
     <div class="table-wrapper">
         {% if patrimonios %}
             <table>

@@ -3,69 +3,91 @@
 {% block title %}Resultados da Pesquisa{% endblock %}
 
 {% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('index') }}"><i class="fas fa-arrow-left"></i> Voltar para a Pesquisa</a>
-</div>
 <div class="card">
-    <h2><i class="fas fa-poll-h"></i> Resultados da Pesquisa</h2>
-    <p>Pesquisando por: <strong>"{{ query }}"</strong> em <strong>
-        {% if search_by == 'codigo_cliente' %}Código do Cliente (Patrimônio)
-        {% elif search_by == 'nome_cliente' %}Nome do Cliente (Patrimônio)
-        {% elif search_by == 'patrimonio_especifico' %}Patrimônio Específico
-        {% elif search_by == 'caixa_cobranca_range' %}Caixa Cobrança (Fichas de Acerto)
-        {% endif %}
-    </strong></p>
+    <div class="admin-nav">
+        <a href="{{ url_for('index') }}"><i class="fas fa-arrow-left"></i> Nova Pesquisa</a>
+    </div>
 
-    <div class="table-wrapper">
-        {% if results %}
-            {% if search_by == 'caixa_cobranca_range' %}
-                <h3>Resultados de Cobrança (Fichas de Acerto)</h3>
+    <h2><i class="fas fa-poll"></i> Resultados da Pesquisa</h2>
+
+    {% if not results %}
+        <p style="text-align: center; padding: 20px;">Nenhum resultado encontrado para "<strong>{{ query }}</strong>" pesquisando em "<strong>{{ search_by | replace('_', ' ') | title }}</strong>".</p>
+    {% else %}
+        {# LÓGICA PARA EXIBIR RESULTADOS DA BUSCA POR CAIXA #}
+        {% if search_by == 'numero_caixa' %}
+            <h3>Resultados para Caixa: "<strong>{{ query }}</strong>"</h3>
+            <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>Ficha de Acerto</th>
-                            <th>Caixa</th>
-                            <th>Range Cliente (Início)</th>
-                            <th>Range Cliente (Fim)</th>
+                            <th>Tipo de Arquivo</th>
+                            <th>Número da Caixa</th>
+                            <th>Conteúdo</th>
+                            <th>Empresa</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in results %}
                             <tr>
-                                <td>{{ item.ficha_acerto }}</td>
+                                <td><i class="fas fa-file-alt"></i> {{ item.type }}</td>
                                 <td>{{ item.caixa }}</td>
-                                <td>{{ item.range_cliente_inicio }}</td>
-                                <td>{{ item.range_cliente_fim }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.store_name or 'N/A' }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            {% else %}
-                <h3>Resultados de Patrimônio</h3>
+            </div>
+        {# LÓGICA PARA OUTROS TIPOS DE BUSCA #}
+        {% elif search_by == 'caixa_cobranca_range' %}
+             <h3>Resultados para Cliente: "<strong>{{ query }}</strong>"</h3>
+            <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>Código do Cliente</th>
-                            <th>Nome do Cliente</th>
+                            <th>Ficha de Acerto</th>
+                            <th>Caixa</th>
+                            <th>Range Início</th>
+                            <th>Range Fim</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results %}
+                        <tr>
+                            <td>{{ item.ficha_acerto }}</td>
+                            <td>{{ item.caixa }}</td>
+                            <td>{{ item.range_cliente_inicio }}</td>
+                            <td>{{ item.range_cliente_fim }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h3>Resultados para: "<strong>{{ query }}</strong>"</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código Cliente</th>
+                            <th>Nome Cliente</th>
                             <th>Patrimônios</th>
                             <th>Número da Caixa</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in results %}
-                            <tr>
-                                <td>{{ item.codigo_cliente }}</td>
-                                <td>{{ item.nome_cliente }}</td>
-                                <td>{{ item.patrimonios }}</td>
-                                <td>{{ item.numero_caixa }}</td>
-                            </tr>
+                        <tr>
+                            <td>{{ item.codigo_cliente }}</td>
+                            <td>{{ item.nome_cliente }}</td>
+                            <td>{{ item.patrimonios }}</td>
+                            <td>{{ item.numero_caixa }}</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            {% endif %}
-        {% else %}
-            <p style="text-align: center; padding: 20px;">Nenhum resultado encontrado para sua pesquisa.</p>
+            </div>
         {% endif %}
-    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
 import sqlite3
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -38,7 +38,7 @@ def role_required(allowed_roles):
             if 'logged_in' not in session or 'role' not in session:
                 flash('Você precisa fazer login para acessar esta página.', 'danger')
                 return redirect(url_for('admin_login'))
-            
+
             if session['role'] not in allowed_roles:
                 flash('Você não tem permissão para acessar esta página.', 'danger')
                 if session.get('role') == 'super_admin':
@@ -59,13 +59,15 @@ def search():
     query = request.args.get('query', '').strip()
     search_by = request.args.get('search_by', 'codigo_cliente')
     results = []
-    
+
     if query:
         db = get_db()
+        query_term = '%' + query + '%'
+
         if search_by == 'codigo_cliente':
-            results = db.execute("SELECT * FROM patrimonios WHERE codigo_cliente LIKE ?", ('%' + query + '%',)).fetchall()
+            results = db.execute("SELECT * FROM patrimonios WHERE codigo_cliente LIKE ?", (query_term,)).fetchall()
         elif search_by == 'nome_cliente':
-            results = db.execute("SELECT * FROM patrimonios WHERE nome_cliente LIKE ?", ('%' + query + '%',)).fetchall()
+            results = db.execute("SELECT * FROM patrimonios WHERE nome_cliente LIKE ?", (query_term,)).fetchall()
         elif search_by == 'patrimonio_especifico':
             all_items = db.execute("SELECT * FROM patrimonios").fetchall()
             for row in all_items:
@@ -77,20 +79,42 @@ def search():
                 results = db.execute("SELECT * FROM cobranca_fichas_acerto WHERE ? BETWEEN range_cliente_inicio AND range_cliente_fim", (cliente_num,)).fetchall()
             except ValueError:
                 flash('Para pesquisa por "Caixa Cobrança", digite um número de cliente válido.', 'danger')
-    
+
+        elif search_by == 'numero_caixa':
+            # Patrimônios: Retorna a lista de patrimônios como conteúdo
+            pat_res = db.execute("SELECT p.numero_caixa, p.patrimonios, 'Patrimônio' as type, s.name as store_name FROM patrimonios p LEFT JOIN stores s ON p.store_id = s.id WHERE p.numero_caixa LIKE ?", (query_term,)).fetchall()
+            for row in pat_res:
+                results.append({'type': row['type'], 'caixa': row['numero_caixa'], 'description': row['patrimonios'], 'store_name': row['store_name']})
+
+            # Contas a Pagar (Pagamentos): Retorna o período como conteúdo
+            pag_res = db.execute("SELECT cap.caixa, cap.pagamento_data_inicio, cap.pagamento_data_fim, 'Pagamento' as type, s.name as store_name FROM contas_a_pagar_pagamentos cap LEFT JOIN stores s ON cap.store_id = s.id WHERE cap.caixa LIKE ?", (query_term,)).fetchall()
+            for row in pag_res:
+                results.append({'type': row['type'], 'caixa': row['caixa'], 'description': f"Período de {row['pagamento_data_inicio']} a {row['pagamento_data_fim']}", 'store_name': row['store_name']})
+
+            # Contas a Pagar (Documentos Diversos): Não possui conteúdo detalhado
+            div_res = db.execute("SELECT cad.numero_caixa, 'Documento Diverso' as type, s.name as store_name FROM contas_a_pagar_diversos cad LEFT JOIN stores s ON cad.store_id = s.id WHERE cad.numero_caixa LIKE ?", (query_term,)).fetchall()
+            for row in div_res:
+                results.append({'type': row['type'], 'caixa': row['numero_caixa'], 'description': 'N/A', 'store_name': row['store_name']})
+
+            # Cobrança: Retorna o RANGE DO CLIENTE como conteúdo
+            cob_res = db.execute("SELECT cfa.caixa, cfa.range_cliente_inicio, cfa.range_cliente_fim, 'Cobrança' as type, s.name as store_name FROM cobranca_fichas_acerto cfa LEFT JOIN stores s ON cfa.store_id = s.id WHERE cfa.caixa LIKE ?", (query_term,)).fetchall()
+            for row in cob_res:
+                results.append({'type': row['type'], 'caixa': row['caixa'], 'description': f"{row['range_cliente_inicio']} - {row['range_cliente_fim']}", 'store_name': row['store_name']})
+
+
     return render_template('search_results.html', results=results, query=query, search_by=search_by)
 
-# --- Rotas Admin (Gerais) ---
+# --- Demais rotas do app.py (sem alterações) ---
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        
+
         db = get_db()
         user = db.execute("SELECT u.*, s.name as store_name FROM users u LEFT JOIN stores s ON u.store_id = s.id WHERE u.username = ?", (username,)).fetchone()
-        
+
         if user and check_password_hash(user['password'], password):
             session['logged_in'] = True
             session['user_id'] = user['id']
@@ -100,7 +124,7 @@ def admin_login():
             session['store_name'] = user['store_name']
             log_action('login')
             flash(f'Login realizado com sucesso!', 'success')
-            
+
             if user['role'] == 'super_admin': return redirect(url_for('super_admin_dashboard'))
             if user['role'] == 'admin_patrimonio': return redirect(url_for('patrimonio_dashboard'))
             if user['role'] == 'admin_rh': return redirect(url_for('rh_dashboard'))
@@ -118,8 +142,6 @@ def admin_logout():
     session.clear()
     flash('Você foi desconectado.', 'info')
     return redirect(url_for('admin_login'))
-
-# --- Rotas SUPER ADMIN ---
 
 @app.route('/super_admin/dashboard')
 @login_required
@@ -236,8 +258,6 @@ def delete_store(store_id):
         flash('EMPRESA não encontrada.', 'danger')
     return redirect(url_for('manage_stores'))
 
-# --- Rotas PATRIMÔNIO ---
-
 @app.route('/patrimonio/dashboard', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_patrimonio'])
@@ -269,7 +289,7 @@ def patrimonio_dashboard():
         stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall()
     else:
         all_patrimonios = db.execute("SELECT p.*, s.name as store_name FROM patrimonios p LEFT JOIN stores s ON p.store_id = s.id WHERE p.store_id = ? ORDER BY p.codigo_cliente", (session.get('store_id'),)).fetchall()
-    
+
     return render_template('patrimonio/patrimonio_dashboard.html', patrimonios=all_patrimonios, stores=stores)
 
 @app.route('/patrimonio/edit/<int:item_id>', methods=['GET', 'POST'])
@@ -278,7 +298,7 @@ def patrimonio_dashboard():
 def patrimonio_edit(item_id):
     db = get_db()
     item = db.execute("SELECT * FROM patrimonios WHERE id = ?", (item_id,)).fetchone()
-    
+
     if not item or (session['role'] != 'super_admin' and item['store_id'] != session.get('store_id')):
         flash('Patrimônio não encontrado ou sem permissão para editar.', 'danger')
         return redirect(url_for('patrimonio_dashboard'))
@@ -291,7 +311,7 @@ def patrimonio_edit(item_id):
         log_action('edit_patrimonio', target_id=item_id, target_name=f"Cliente {codigo_cliente}")
         flash('Patrimônio atualizado com sucesso!', 'success')
         return redirect(url_for('patrimonio_dashboard'))
-        
+
     return render_template('patrimonio/patrimonio_edit.html', item=item)
 
 @app.route('/patrimonio/delete/<int:item_id>', methods=['POST'])
@@ -309,15 +329,12 @@ def patrimonio_delete(item_id):
         flash('Patrimônio excluído com sucesso!', 'success')
     return redirect(url_for('patrimonio_dashboard'))
 
-# --- Rotas RH (Placeholder) ---
 @app.route('/rh/dashboard')
 @login_required
 @role_required(['super_admin', 'admin_rh'])
 def rh_dashboard():
-    # TODO: Implementar CRUD e isolamento por store_id
     return render_template('rh/rh_dashboard.html')
 
-# --- Rotas Contas a Pagar - Pagamentos ---
 @app.route('/contas_a_pagar/dashboard', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_contas_a_pagar'])
@@ -332,7 +349,7 @@ def contas_a_pagar_dashboard():
                 return redirect(url_for('contas_a_pagar_dashboard'))
         else:
             store_id = session.get('store_id')
-            
+
         caixa = request.form['caixa']
         form_data = (request.form['pagamento_data_inicio'], request.form['pagamento_data_fim'], caixa, store_id)
         cursor = db.cursor()
@@ -355,13 +372,10 @@ def contas_a_pagar_dashboard():
 
     for item in pagamentos:
         try:
-            print("INICIO:", item['pagamento_data_inicio'])
-            print("FIM:", item['pagamento_data_fim'])
             item['pagamento_data_inicio'] = datetime.strptime(item['pagamento_data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
             item['pagamento_data_fim'] = datetime.strptime(item['pagamento_data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
-        except Exception as e:
-            print("Erro ao formatar data:", e)
-
+        except (ValueError, TypeError):
+            pass
 
     return render_template('contas_a_pagar/contas_a_pagar_dashboard.html', pagamentos=pagamentos, stores=stores)
 
@@ -384,7 +398,7 @@ def contas_a_pagar_pagamentos_edit(item_id):
         log_action('edit_pagamento', target_id=item_id, target_name=f"Caixa {caixa}")
         flash('Registro atualizado com sucesso!', 'success')
         return redirect(url_for('contas_a_pagar_dashboard'))
-        
+
     return render_template('contas_a_pagar/contas_a_pagar_pagamentos_edit.html', item=item)
 
 @app.route('/contas_a_pagar/pagamentos/delete/<int:item_id>', methods=['POST'])
@@ -402,7 +416,6 @@ def contas_a_pagar_pagamentos_delete(item_id):
         flash('Registro excluído com sucesso!', 'success')
     return redirect(url_for('contas_a_pagar_dashboard'))
 
-# --- Rotas Contas a Pagar - Documentos Diversos ---
 @app.route('/contas_a_pagar/documentos_diversos', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_contas_a_pagar'])
@@ -433,7 +446,7 @@ def documentos_diversos_dashboard():
         stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall()
     else:
         documentos = db.execute("SELECT d.*, s.name as store_name FROM contas_a_pagar_diversos d LEFT JOIN stores s ON d.store_id = s.id WHERE d.store_id = ? ORDER BY d.numero_caixa", (session.get('store_id'),)).fetchall()
-    
+
     return render_template('contas_a_pagar/documentos_diversos_dashboard.html', documentos_diversos=documentos, stores=stores)
 
 @app.route('/contas_a_pagar/documentos_diversos/edit/<int:item_id>', methods=['GET', 'POST'])
@@ -472,7 +485,6 @@ def contas_a_pagar_diversos_delete(item_id):
         flash('Documento excluído com sucesso!', 'success')
     return redirect(url_for('documentos_diversos_dashboard'))
 
-# --- Rotas Cobrança ---
 @app.route('/cobranca/dashboard', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_cobranca'])
@@ -487,18 +499,23 @@ def cobranca_dashboard():
                 return redirect(url_for('cobranca_dashboard'))
         else:
             store_id = session.get('store_id')
-            
+
         try:
             ficha_acerto = request.form['ficha_acerto']
+
+            pos_cursor = db.execute("SELECT IFNULL(MAX(order_position), 0) + 1 AS next_pos FROM cobranca_fichas_acerto WHERE store_id " + ("= ?" if store_id else "IS NULL"), (store_id,) if store_id else ())
+            next_pos = pos_cursor.fetchone()['next_pos']
+
             form_data = (
                 ficha_acerto,
                 request.form['caixa'],
                 int(request.form['range_cliente_inicio']),
                 int(request.form['range_cliente_fim']),
-                store_id
+                store_id,
+                next_pos
             )
             cursor = db.cursor()
-            cursor.execute("INSERT INTO cobranca_fichas_acerto (ficha_acerto, caixa, range_cliente_inicio, range_cliente_fim, store_id) VALUES (?, ?, ?, ?, ?)", form_data)
+            cursor.execute("INSERT INTO cobranca_fichas_acerto (ficha_acerto, caixa, range_cliente_inicio, range_cliente_fim, store_id, order_position) VALUES (?, ?, ?, ?, ?, ?)", form_data)
             new_id = cursor.lastrowid
             db.commit()
             log_action('add_ficha_acerto', target_id=new_id, target_name=f"Ficha {ficha_acerto}")
@@ -509,11 +526,11 @@ def cobranca_dashboard():
 
     stores = []
     if session['role'] == 'super_admin':
-        fichas = db.execute("SELECT f.*, s.name as store_name FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id ORDER BY f.ficha_acerto").fetchall()
+        fichas = db.execute("SELECT f.*, s.name as store_name FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id ORDER BY f.order_position ASC").fetchall()
         stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall()
     else:
-        fichas = db.execute("SELECT f.*, s.name as store_name FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id WHERE f.store_id = ? ORDER BY f.ficha_acerto", (session.get('store_id'),)).fetchall()
-        
+        fichas = db.execute("SELECT f.*, s.name as store_name FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id WHERE f.store_id = ? ORDER BY f.order_position ASC", (session.get('store_id'),)).fetchall()
+
     return render_template('cobranca/cobranca_dashboard.html', fichas_acerto=fichas, stores=stores)
 
 @app.route('/cobranca/fichas_acerto/edit/<int:item_id>', methods=['GET', 'POST'])
@@ -562,5 +579,36 @@ def cobranca_fichas_acerto_delete(item_id):
         flash('Ficha de Acerto excluída com sucesso!', 'success')
     return redirect(url_for('cobranca_dashboard'))
 
+@app.route('/cobranca/fichas_acerto/update_order', methods=['POST'])
+@login_required
+@role_required(['super_admin', 'admin_cobranca'])
+def cobranca_fichas_acerto_update_order():
+    data = request.get_json()
+    ordered_ids = data.get('order')
+
+    if not ordered_ids:
+        return jsonify({'status': 'error', 'message': 'Nenhuma ordem fornecida.'}), 400
+
+    db = get_db()
+    try:
+        if session['role'] != 'super_admin':
+            placeholders = ','.join('?' for _ in ordered_ids)
+            params = ordered_ids + [session.get('store_id')]
+            cursor = db.execute(f"SELECT COUNT(id) FROM cobranca_fichas_acerto WHERE id IN ({placeholders}) AND store_id = ?", params)
+            count = cursor.fetchone()[0]
+            if count != len(ordered_ids):
+                 return jsonify({'status': 'error', 'message': 'Permissão negada para um ou mais itens.'}), 403
+
+        for index, item_id in enumerate(ordered_ids):
+            db.execute("UPDATE cobranca_fichas_acerto SET order_position = ? WHERE id = ?", (index, item_id))
+        db.commit()
+        log_action('reorder_fichas_acerto')
+        return jsonify({'status': 'success', 'message': 'Ordem atualizada com sucesso!'})
+    except Exception as e:
+        db.rollback()
+        app.logger.error(f"Erro ao reordenar fichas: {e}")
+        return jsonify({'status': 'error', 'message': 'Ocorreu um erro interno.'}), 500
+
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000)
+    app.run()
