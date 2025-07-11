@@ -123,7 +123,8 @@ async function handlePaginationClick(link) {
 function createTableRow(item, pageType) {
     const isSuperAdmin = document.body.dataset.isSuperAdmin === 'true';
     let cells = '';
-    let actionsCell = '';
+    
+    let editUrl, deleteUrl;
 
     // Colunas específicas para cada tipo de página
     switch (pageType) {
@@ -136,6 +137,8 @@ function createTableRow(item, pageType) {
                 <td>${item.patrimonios}</td>
                 <td>${item.numero_caixa}</td>
             `;
+            editUrl = `/patrimonio/edit/${item.id}`;
+            deleteUrl = `/patrimonio/delete/${item.id}`;
             break;
         case 'cobranca':
              cells = `
@@ -146,6 +149,8 @@ function createTableRow(item, pageType) {
                 <td>${item.caixa}</td>
                 <td>${item.range_cliente_inicio} - ${item.range_cliente_fim}</td>
             `;
+            editUrl = `/cobranca/fichas_acerto/edit/${item.id}`;
+            deleteUrl = `/cobranca/fichas_acerto/delete/${item.id}`;
             break;
         case 'contas_a_pagar_pagamentos':
             cells = `
@@ -155,6 +160,8 @@ function createTableRow(item, pageType) {
                 <td>${item.pagamento_data_fim}</td>
                 <td>${item.caixa}</td>
             `;
+            editUrl = `/contas_a_pagar/pagamentos/edit/${item.id}`;
+            deleteUrl = `/contas_a_pagar/pagamentos/delete/${item.id}`;
             break;
         case 'contas_a_pagar_diversos':
             cells = `
@@ -162,6 +169,8 @@ function createTableRow(item, pageType) {
                 ${isSuperAdmin ? `<td>${item.store_name || 'N/A'}</td>` : ''}
                 <td>${item.numero_caixa}</td>
             `;
+            editUrl = `/contas_a_pagar/documentos_diversos/edit/${item.id}`;
+            deleteUrl = `/contas_a_pagar/documentos_diversos/delete/${item.id}`;
             break;
         case 'user_management':
             cells = `
@@ -171,6 +180,8 @@ function createTableRow(item, pageType) {
                 <td>${item.store_name || 'N/A'}</td>
                 <td>${item.can_add_users ? 'Sim' : 'Não'}</td>
             `;
+            editUrl = `/super_admin/users/edit/${item.id}`;
+            deleteUrl = `/super_admin/users/delete/${item.id}`;
             break;
         case 'manage_stores':
             cells = `
@@ -178,31 +189,24 @@ function createTableRow(item, pageType) {
                 <td>${item.name}</td>
                 <td>${(item.departments || 'Nenhum').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
             `;
+            deleteUrl = `/super_admin/stores/delete/${item.id}`;
             break;
     }
 
     // Coluna de ações (Editar/Excluir)
-    if (pageType === 'user_management' || pageType === 'manage_stores') {
-        const deleteUrl = `/super_admin/${pageType === 'user_management' ? 'users' : 'stores'}/delete/${item.id}`;
-        actionsCell = `
-             <td class="actions">
-                <form action="${deleteUrl}" method="POST" style="display:inline;" class="delete-form" data-ajax="true">
-                    <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-                </form>
-            </td>
-        `;
-    } else {
-        const editUrl = `/${pageType.replace(/_/g, '/')}/edit/${item.id}`;
-        const deleteUrl = `/${pageType.replace(/_/g, '/')}/delete/${item.id}`;
-        actionsCell = `
-            <td class="actions">
-                <a href="${editUrl}" class="edit" title="Editar"><i class="fas fa-edit"></i></a>
-                <form action="${deleteUrl}" method="POST" style="display:inline;" class="delete-form" data-ajax="true">
-                    <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-                </form>
-            </td>
+    let actionsCell = `<td class="actions">`;
+    if (editUrl) {
+        actionsCell += `<a href="${editUrl}" class="edit" title="Editar"><i class="fas fa-edit"></i></a>`;
+    }
+    if (deleteUrl) {
+        actionsCell += `
+            <form action="${deleteUrl}" method="POST" style="display:inline;" class="delete-form" data-ajax="true">
+                <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            </form>
         `;
     }
+    actionsCell += `</td>`;
+
 
     return `<tr data-id="${item.id}">${cells}${actionsCell}</tr>`;
 }
