@@ -96,7 +96,7 @@ async function handlePaginationClick(link) {
         const tableBody = document.querySelector('.table-wrapper tbody');
         tableBody.innerHTML = ''; // Limpa a tabela
         result.items.forEach(item => {
-            const newRow = createTableRow(item, result.page_type);
+            const newRow = createTableRow(item, result.page_type, result.script_root);
             tableBody.insertAdjacentHTML('beforeend', newRow);
         });
 
@@ -118,11 +118,12 @@ async function handlePaginationClick(link) {
  * Cria o HTML para uma nova linha de tabela.
  * @param {object} item O objeto com os dados do item.
  * @param {string} pageType O tipo de página (e.g., 'patrimonio', 'cobranca').
+ * @param {string} scriptRoot O prefixo da URL da aplicação (e.g., /arquivos).
  * @returns {string} O HTML da linha da tabela (<tr>).
  */
-function createTableRow(item, pageType) {
+function createTableRow(item, pageType, scriptRoot) {
     const isSuperAdmin = document.body.dataset.isSuperAdmin === 'true';
-    const scriptName = document.body.dataset.scriptName || ''; // Pega o prefixo da URL
+    const prefix = scriptRoot || document.body.dataset.scriptName || '';
     let cells = '';
     
     let editUrl, deleteUrl;
@@ -138,8 +139,8 @@ function createTableRow(item, pageType) {
                 <td>${item.patrimonios}</td>
                 <td>${item.numero_caixa}</td>
             `;
-            editUrl = `${scriptName}/patrimonio/edit/${item.id}`;
-            deleteUrl = `${scriptName}/patrimonio/delete/${item.id}`;
+            editUrl = `${prefix}/patrimonio/edit/${item.id}`;
+            deleteUrl = `${prefix}/patrimonio/delete/${item.id}`;
             break;
         case 'cobranca':
              cells = `
@@ -150,8 +151,8 @@ function createTableRow(item, pageType) {
                 <td>${item.caixa}</td>
                 <td>${item.range_cliente_inicio} - ${item.range_cliente_fim}</td>
             `;
-            editUrl = `${scriptName}/cobranca/fichas_acerto/edit/${item.id}`;
-            deleteUrl = `${scriptName}/cobranca/fichas_acerto/delete/${item.id}`;
+            editUrl = `${prefix}/cobranca/fichas_acerto/edit/${item.id}`;
+            deleteUrl = `${prefix}/cobranca/fichas_acerto/delete/${item.id}`;
             break;
         case 'contas_a_pagar_pagamentos':
             cells = `
@@ -161,8 +162,8 @@ function createTableRow(item, pageType) {
                 <td>${item.pagamento_data_fim}</td>
                 <td>${item.caixa}</td>
             `;
-            editUrl = `${scriptName}/contas_a_pagar/pagamentos/edit/${item.id}`;
-            deleteUrl = `${scriptName}/contas_a_pagar/pagamentos/delete/${item.id}`;
+            editUrl = `${prefix}/contas_a_pagar/pagamentos/edit/${item.id}`;
+            deleteUrl = `${prefix}/contas_a_pagar/pagamentos/delete/${item.id}`;
             break;
         case 'contas_a_pagar_diversos':
             cells = `
@@ -170,8 +171,8 @@ function createTableRow(item, pageType) {
                 ${isSuperAdmin ? `<td>${item.store_name || 'N/A'}</td>` : ''}
                 <td>${item.numero_caixa}</td>
             `;
-            editUrl = `${scriptName}/contas_a_pagar/documentos_diversos/edit/${item.id}`;
-            deleteUrl = `${scriptName}/contas_a_pagar/documentos_diversos/delete/${item.id}`;
+            editUrl = `${prefix}/contas_a_pagar/documentos_diversos/edit/${item.id}`;
+            deleteUrl = `${prefix}/contas_a_pagar/documentos_diversos/delete/${item.id}`;
             break;
         case 'user_management':
             cells = `
@@ -181,8 +182,8 @@ function createTableRow(item, pageType) {
                 <td>${item.store_name || 'N/A'}</td>
                 <td>${item.can_add_users ? 'Sim' : 'Não'}</td>
             `;
-            editUrl = `${scriptName}/super_admin/users/edit/${item.id}`;
-            deleteUrl = `${scriptName}/super_admin/users/delete/${item.id}`;
+            editUrl = `${prefix}/super_admin/users/edit/${item.id}`;
+            deleteUrl = `${prefix}/super_admin/users/delete/${item.id}`;
             break;
         case 'manage_stores':
             cells = `
@@ -190,7 +191,7 @@ function createTableRow(item, pageType) {
                 <td>${item.name}</td>
                 <td>${(item.departments || 'Nenhum').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
             `;
-            deleteUrl = `${scriptName}/super_admin/stores/delete/${item.id}`;
+            deleteUrl = `${prefix}/super_admin/stores/delete/${item.id}`;
             break;
     }
 

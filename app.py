@@ -373,7 +373,8 @@ def user_management():
         return jsonify({
             'items': [dict(r) for r in users],
             'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
-            'page_type': 'user_management'
+            'page_type': 'user_management',
+            'script_root': request.script_root or ''
         })
         
     return render_template('super_admin/user_management.html', users=users, stores=stores, page=page, total_pages=total_pages, search=search_query)
@@ -463,7 +464,8 @@ def manage_stores():
         return jsonify({
             'items': [dict(r) for r in stores_data],
             'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
-            'page_type': 'manage_stores'
+            'page_type': 'manage_stores',
+            'script_root': request.script_root or ''
         })
 
     available_departments = ['admin_rh', 'admin_patrimonio', 'admin_contas_a_pagar', 'admin_cobranca']
@@ -549,7 +551,8 @@ def patrimonio_dashboard():
         return jsonify({
             'items': [dict(r) for r in items],
             'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
-            'page_type': 'patrimonio'
+            'page_type': 'patrimonio',
+            'script_root': request.script_root or ''
         })
 
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
@@ -698,7 +701,8 @@ def contas_a_pagar_dashboard():
         return jsonify({
             'items': items_formatted,
             'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
-            'page_type': 'contas_a_pagar_pagamentos'
+            'page_type': 'contas_a_pagar_pagamentos',
+            'script_root': request.script_root or ''
         })
 
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
@@ -810,7 +814,8 @@ def cobranca_dashboard():
         return jsonify({
             'items': [dict(r) for r in items],
             'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
-            'page_type': 'cobranca'
+            'page_type': 'cobranca',
+            'script_root': request.script_root or ''
         })
     
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
@@ -941,7 +946,8 @@ def documentos_diversos_dashboard():
         return jsonify({
             'items': [dict(r) for r in items],
             'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, request=request, search=search_query),
-            'page_type': 'contas_a_pagar_diversos'
+            'page_type': 'contas_a_pagar_diversos',
+            'script_root': request.script_root or ''
         })
     
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
