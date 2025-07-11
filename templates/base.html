@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
-<body data-is-super-admin="{{ 'true' if session.role == 'super_admin' else 'false' }}" {% block body_attributes %}{% endblock %}>
+<body data-is-super-admin="{{ 'true' if session.role == 'super_admin' else 'false' }}" data-script-name="{{ request.script_root or '' }}" {% block body_attributes %}{% endblock %}>
     <div class="container">
         <header class="main-header">
             <h1><i class="fas fa-archive"></i> ARQUIVOS</h1>

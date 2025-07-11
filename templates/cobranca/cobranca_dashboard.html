@@ -56,7 +56,6 @@
             <table>
                 <thead>
                     <tr>
-                        <th><i class="fas fa-sort"></i></th>
                         <th>ID</th>
                         {% if session.role == 'super_admin' %}<th>Empresa</th>{% endif %}
                         <th>Ficha de Acerto</th>
@@ -68,7 +67,6 @@
                 <tbody id="sortable-table">
                     {% for item in fichas_acerto %}
                         <tr data-id="{{ item.id }}">
-                            <td class="drag-handle"><i class="fas fa-grip-vertical"></i></td>
                             <td>{{ item.id }}</td>
                             {% if session.role == 'super_admin' %}<td>{{ item.store_name or 'N/A' }}</td>{% endif %}
                             <td>{{ item.ficha_acerto }}</td>
@@ -92,38 +90,4 @@
 
 {% include '_pagination.html' %}
 
-<script>
-document.addEventListener('DOMContentLoaded', (event) => {
-    const tableBody = document.getElementById('sortable-table');
-    if (tableBody) {
-        Sortable.create(tableBody, {
-            animation: 150,
-            handle: '.drag-handle', // Define a alça para arrastar
-            ghostClass: 'sortable-ghost', // Classe CSS para o item "fantasma"
-            onEnd: function (evt) {
-                const order = Array.from(evt.to.children).map(row => row.dataset.id);
-
-                fetch("{{ url_for('cobranca_fichas_acerto_update_order') }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ order: order }),
-                    
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status !== 'success') {
-                        // Opcional: Adicionar um feedback visual de erro
-                        console.error('Falha ao reordenar:', data.message);
-                        alert('Ocorreu um erro ao tentar salvar a nova ordem.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro na requisição:', error);
-                    alert('Ocorreu um erro de conexão ao tentar salvar a nova ordem.');
-                });
-            }
-        });
-    }
-});
-</script>
 {% endblock %}

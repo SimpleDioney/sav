@@ -766,9 +766,8 @@ def cobranca_dashboard():
             return redirect(url_for('cobranca_dashboard'))
             
         try:
-            pos_cursor = db.execute("SELECT IFNULL(MAX(order_position), 0) + 1 AS next_pos FROM cobranca_fichas_acerto WHERE store_id " + ("= ?" if store_id else "IS NULL"), (store_id,) if store_id else ())
-            next_pos = pos_cursor.fetchone()['next_pos']
-            dados_novos = {'ficha_acerto': request.form['ficha_acerto'], 'caixa': request.form['caixa'], 'range_cliente_inicio': int(request.form['range_cliente_inicio']), 'range_cliente_fim': int(request.form['range_cliente_fim']), 'store_id': store_id, 'order_position': next_pos}
+            # A posição da ordem é desativada em favor da ordenação automática
+            dados_novos = {'ficha_acerto': request.form['ficha_acerto'], 'caixa': request.form['caixa'], 'range_cliente_inicio': int(request.form['range_cliente_inicio']), 'range_cliente_fim': int(request.form['range_cliente_fim']), 'store_id': store_id, 'order_position': 0}
             cursor = db.cursor()
             cursor.execute("INSERT INTO cobranca_fichas_acerto (ficha_acerto, caixa, range_cliente_inicio, range_cliente_fim, store_id, order_position) VALUES (?, ?, ?, ?, ?, ?)", list(dados_novos.values()))
             new_id = cursor.lastrowid
@@ -808,7 +807,8 @@ def cobranca_dashboard():
     total_items = db.execute(f"SELECT COUNT(f.id) {base_query}", params).fetchone()[0]
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
     offset = (page - 1) * PER_PAGE
-    items = db.execute(f"SELECT f.*, s.name as store_name {base_query} ORDER BY f.order_position ASC LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
+    # ✅ ORDENAÇÃO AUTOMÁTICA APLICADA AQUI
+    items = db.execute(f"SELECT f.*, s.name as store_name {base_query} ORDER BY f.caixa ASC, f.range_cliente_inicio ASC LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
     
     if is_ajax_request() and request.method == 'GET':
         return jsonify({
@@ -876,7 +876,7 @@ def cobranca_export_csv():
         query += " WHERE f.store_id = ?"
         params.append(session.get('store_id'))
     
-    items = db.execute(query + " ORDER BY f.order_position ASC", params).fetchall()
+    items = db.execute(query + " ORDER BY f.caixa ASC, f.range_cliente_inicio ASC", params).fetchall()
     output = io.StringIO()
     writer = csv.writer(output)
     
