@@ -40,7 +40,7 @@
                     </tbody>
                 </table>
             </div>
-        {# LÓGICA PARA OUTROS TIPOS DE BUSCA #}
+        {# LÓGICA PARA BUSCA EM FAIXA DE COBRANÇA #}
         {% elif search_by == 'caixa_cobranca_range' %}
              <h3>Resultados para Cliente: "<strong>{{ query }}</strong>"</h3>
             <div class="table-wrapper">
@@ -65,6 +65,36 @@
                     </tbody>
                 </table>
             </div>
+        {# NOVA LÓGICA PARA BUSCA DE PATRIMÔNIO ESPECÍFICO #}
+        {% elif search_by == 'patrimonio_especifico' %}
+            <h3>Resultados para Patrimônio: "<strong>{{ query }}</strong>"</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código Cliente</th>
+                            <th>Nome Cliente</th>
+                            <th>Código Patrimônio</th>
+                            <th>Tipo</th>
+                            <th>Marca</th>
+                            <th>Tamanho</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results %}
+                        <tr>
+                            <td>{{ item.codigo_cliente }}</td>
+                            <td>{{ item.nome_cliente }}</td>
+                            <td>{{ item.codigo_patrimonio }}</td>
+                            <td>{{ item.tipo }}</td>
+                            <td>{{ item.marca }}</td>
+                            <td>{{ item.tamanho or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {# LÓGICA PADRÃO PARA BUSCA DE CLIENTES #}
         {% else %}
             <h3>Resultados para: "<strong>{{ query }}</strong>"</h3>
             <div class="table-wrapper">
@@ -73,7 +103,6 @@
                         <tr>
                             <th>Código Cliente</th>
                             <th>Nome Cliente</th>
-                            <th>Patrimônios</th>
                             <th>Número da Caixa</th>
                         </tr>
                     </thead>
@@ -82,7 +111,6 @@
                         <tr>
                             <td>{{ item.codigo_cliente }}</td>
                             <td>{{ item.nome_cliente }}</td>
-                            <td>{{ item.patrimonios }}</td>
                             <td>{{ item.numero_caixa }}</td>
                         </tr>
                         {% endfor %}

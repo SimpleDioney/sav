@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios de Patrimônio{% endblock %}
+
+{% block content %}
+<div class="admin-nav">
+    <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+</div>
+
+<div class="card">
+    <h2><i class="fas fa-chart-bar"></i> Filtros de Relatório</h2>
+    <form method="GET" action="{{ url_for('patrimonio_relatorios') }}" class="form-section filter-form">
+        <div class="filter-controls">
+            {% if session.role == 'super_admin' %}
+            <select name="store_id">
+                <option value="">Todas as Empresas</option>
+                {% for store in stores %}
+                    <option value="{{ store.id }}" {% if current_filters.store_id == store.id %}selected{% endif %}>{{ store.name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            
+            <select name="tipo_id">
+                <option value="">Todos os Tipos</option>
+                {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}" {% if current_filters.tipo_id == tipo.id %}selected{% endif %}>{{ tipo.nome }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="marca_id">
+                <option value="">Todas as Marcas</option>
+                {% for marca in marcas %}
+                    <option value="{{ marca.id }}" {% if current_filters.marca_id == marca.id %}selected{% endif %}>{{ marca.nome }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="tamanho">
+                <option value="">Todos os Tamanhos</option>
+                <option value="Pequeno" {% if current_filters.tamanho == 'Pequeno' %}selected{% endif %}>Pequeno</option>
+                <option value="Medio" {% if current_filters.tamanho == 'Medio' %}selected{% endif %}>Médio</option>
+                <option value="Grande" {% if current_filters.tamanho == 'Grande' %}selected{% endif %}>Grande</option>
+            </select>
+
+            <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Filtrar</button>
+            <a href="{{ url_for('patrimonio_relatorios') }}" class="clear-btn">Limpar Filtros</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2><i class="fas fa-poll"></i> Resultados</h2>
+    <div class="table-wrapper">
+        {% if resultados %}
+            <table>
+                <thead>
+                    <tr>
+                        {% if session.role == 'super_admin' %}<th>Empresa</th>{% endif %}
+                        <th>Tipo</th>
+                        <th>Marca</th>
+                        <th>Tamanho</th>
+                        <th>Quantidade Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resultado in resultados %}
+                        <tr>
+                            {% if session.role == 'super_admin' %}<td>{{ resultado.store_name or 'N/A' }}</td>{% endif %}
+                            <td>{{ resultado.tipo }}</td>
+                            <td>{{ resultado.marca }}</td>
+                            <td>{{ resultado.tamanho or 'N/A' }}</td>
+                            <td><strong>{{ resultado.total }}</strong></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhum resultado encontrado para os filtros selecionados.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,26 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Editar Patrimônio - SAV{% endblock %}
+{% block title %}Editar Cliente e Patrimônios{% endblock %}
 
 {% block content %}
-    <h2>Editar Patrimônio</h2>
     <div class="admin-nav">
-        <a href="{{ url_for('patrimonio_dashboard') }}">Voltar para Painel Patrimônio</a>
+        <a href="{{ url_for('patrimonio_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Painel</a>
     </div>
 
-    <form action="{{ url_for('patrimonio_edit', item_id=item.id) }}" method="POST">
-        <label for="codigo_cliente">Código do Cliente:</label>
-        <input type="text" id="codigo_cliente" name="codigo_cliente" value="{{ item.codigo_cliente }}" required>
-        
-        <label for="nome_cliente">Nome do Cliente:</label>
-        <input type="text" id="nome_cliente" name="nome_cliente" value="{{ item.nome_cliente }}" required>
-        
-        <label for="patrimonios">Patrimônios (separados por / ):</label>
-        <textarea id="patrimonios" name="patrimonios" rows="3" required>{{ item.patrimonios }}</textarea>
-        
-        <label for="numero_caixa">Número da Caixa:</label>
-        <input type="text" id="numero_caixa" name="numero_caixa" value="{{ item.numero_caixa }}" required>
-        
-        <button type="submit">Salvar Alterações</button>
-    </form>
+    <div class="card">
+        <h2><i class="fas fa-user-edit"></i> Editar Dados do Cliente</h2>
+        <!-- ✅ CORREÇÃO: Usando 'cliente_id' como esperado pela rota -->
+        <form action="{{ url_for('patrimonio_edit', cliente_id=cliente.id) }}" method="POST" class="form-section">
+            <label for="codigo_cliente">Código do Cliente:</label>
+            <input type="text" id="codigo_cliente" name="codigo_cliente" value="{{ cliente.codigo_cliente }}" required>
+            
+            <label for="nome_cliente">Nome do Cliente:</label>
+            <input type="text" id="nome_cliente" name="nome_cliente" value="{{ cliente.nome_cliente }}" required>
+            
+            <label for="numero_caixa">Número da Caixa:</label>
+            <input type="text" id="numero_caixa" name="numero_caixa" value="{{ cliente.numero_caixa }}" required>
+            
+            <button type="submit"><i class="fas fa-save"></i> Salvar Alterações do Cliente</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-boxes"></i> Patrimônios Associados</h2>
+        <div class="table-wrapper">
+            {% if patrimonios %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Tipo</th>
+                            <th>Marca</th>
+                            <th>Tamanho</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ✅ CORREÇÃO: Estrutura do loop corrigida -->
+                        {% for item in patrimonios %}
+                            <tr>
+                                <td>{{ item.codigo_patrimonio }}</td>
+                                <td>{{ item.tipo }}</td>
+                                <td>{{ item.marca }}</td>
+                                <td>{{ item.tamanho or 'N/A' }}</td>
+                                <td class="actions">
+                                    <form action="{{ url_for('delete_patrimonio_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja remover este item de patrimônio?');">
+                                        <button type="submit" class="delete" title="Remover Patrimônio"><i class="fas fa-trash-alt"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="text-align:center; padding: 20px;">Nenhum item de patrimônio cadastrado para este cliente.</p>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

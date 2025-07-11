@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Marcas de Equipamentos{% endblock %}
+
+{% block content %}
+<div class="admin-nav">
+    <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+</div>
+
+<div class="card">
+    <h2><i class="fas fa-plus-circle"></i> Adicionar Nova Marca</h2>
+    <form action="{{ url_for('manage_marcas') }}" method="POST" class="form-section">
+        <label for="tipo_id">Tipo de Equipamento:</label>
+        <select id="tipo_id" name="tipo_id" required>
+            <option value="">Selecione um tipo</option>
+            {% for tipo in tipos %}
+                <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="nome_marca">Nome da Nova Marca:</label>
+        <input type="text" id="nome_marca" name="nome_marca" required>
+        
+        <button type="submit"><i class="fas fa-plus"></i> Adicionar Marca</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2><i class="fas fa-tags"></i> Marcas Existentes</h2>
+    <div class="table-wrapper">
+        {% if marcas %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Marca</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for marca in marcas %}
+                        <tr>
+                            <td>{{ marca.tipo_nome }}</td>
+                            <td>{{ marca.nome }}</td>
+                            <td class="actions">
+                                <form action="{{ url_for('delete_marca', marca_id=marca.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta marca?');">
+                                    <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhuma marca cadastrada.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

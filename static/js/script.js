@@ -1,25 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Delegação de eventos para ações AJAX
-    document.body.addEventListener('submit', function(event) {
-        const form = event.target;
-        // Se o formulário for o de patrimônio, não usa AJAX para permitir o reload da página
-        if (form.matches('form[data-ajax="true"]') && form.id !== 'patrimonio-form') {
-            event.preventDefault();
-            handleFormSubmit(form);
-        }
-    });
-
-    document.body.addEventListener('click', function(event) {
-        const link = event.target.closest('a');
-        if (link && link.matches('.pagination a')) {
-            if (document.body.dataset.pageType === 'search-results' || new URL(link.href).searchParams.has('search')) {
-                return;
-            }
-            event.preventDefault();
-            handlePaginationClick(link);
-        }
-    });
-
     // Lógica para autocompletar nome do cliente no formulário de patrimônio
     const codigoClienteInput = document.getElementById('codigo_cliente');
     if (codigoClienteInput) {
@@ -28,23 +7,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const nomeClienteInput = document.getElementById('nome_cliente');
             const clienteInfoSpan = document.getElementById('cliente-info');
             const scriptRoot = document.body.dataset.scriptName || '';
+            
+            // Para super_admin, precisamos passar o store_id selecionado
+            const storeSelect = document.getElementById('store_id');
+            const storeId = storeSelect ? storeSelect.value : '';
 
             if (codigo) {
                 try {
-                    const response = await fetch(`${scriptRoot}/api/cliente/${codigo}`);
+                    let url = `${scriptRoot}/api/cliente/${codigo}`;
+                    // Adiciona store_id como parâmetro de consulta para a API
+                    if (storeId) {
+                        url += `?store_id=${storeId}`;
+                    }
+                    const response = await fetch(url);
                     if (response.ok) {
                         const data = await response.json();
                         nomeClienteInput.value = data.nome_cliente;
                         nomeClienteInput.readOnly = true;
-                        clienteInfoSpan.textContent = 'Cliente encontrado. Os novos patrimônios serão adicionados a este cliente.';
+                        clienteInfoSpan.textContent = 'Cliente encontrado. O patrimônio será adicionado a este cliente.';
+                        clienteInfoSpan.style.color = 'green';
                     } else {
                         nomeClienteInput.value = '';
                         nomeClienteInput.readOnly = false;
                         clienteInfoSpan.textContent = 'Novo cliente. Preencha o nome.';
+                        clienteInfoSpan.style.color = '#3498db';
                     }
                 } catch (error) {
                     console.error('Erro ao buscar cliente:', error);
                     clienteInfoSpan.textContent = 'Erro ao buscar dados do cliente.';
+                    clienteInfoSpan.style.color = 'red';
                 }
             } else {
                 nomeClienteInput.value = '';
@@ -53,7 +44,48 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Lógica para formulário de patrimônio dinâmico (marcas e tamanho)
+    const tipoSelect = document.getElementById('tipo_id');
+    const marcaSelect = document.getElementById('marca_id');
+    const tamanhoDiv = document.getElementById('tamanho-div');
+    const scriptRoot = document.body.dataset.scriptName || '';
+
+    if (tipoSelect && marcaSelect) {
+        tipoSelect.addEventListener('change', async function() {
+            const tipoId = this.value;
+            
+            marcaSelect.innerHTML = '<option value="">Carregando...</option>';
+            marcaSelect.disabled = true;
+
+            const selectedText = this.options[this.selectedIndex].text;
+            tamanhoDiv.style.display = selectedText.toLowerCase() === 'freezer' ? 'block' : 'none';
+
+            if (tipoId) {
+                try {
+                    const url = `${scriptRoot}/api/marcas/${tipoId}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Falha na resposta da rede');
+                    
+                    const marcas = await response.json();
+                    
+                    marcaSelect.innerHTML = '<option value="">Selecione uma marca</option>';
+                    marcas.forEach(marca => {
+                        const option = new Option(marca.nome, marca.id);
+                        marcaSelect.add(option);
+                    });
+                    marcaSelect.disabled = false;
+                } catch (error) {
+                    console.error('Erro ao buscar marcas:', error);
+                    marcaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+                }
+            } else {
+                marcaSelect.innerHTML = '<option value="">Selecione um tipo primeiro</option>';
+            }
+        });
+    }
 });
+
 
 /**
  * Manipula o envio de formulários AJAX (adição e exclusão).

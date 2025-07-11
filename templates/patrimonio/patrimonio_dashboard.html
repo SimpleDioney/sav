@@ -14,7 +14,7 @@
     </div>
 
     <h2><i class="fas fa-box"></i> Adicionar Novo Patrimônio</h2>
-    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST" class="form-section" data-is-ajax="true" data-page-type="patrimonio">
+    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST" class="form-section" id="patrimonio-form">
         {% if session.role == 'super_admin' %}
         <label for="store_id">Empresa:</label>
         <select id="store_id" name="store_id" required>
@@ -27,63 +27,79 @@
         
         <label for="codigo_cliente">Código do Cliente:</label>
         <input type="text" id="codigo_cliente" name="codigo_cliente" required>
-        
+        <span id="cliente-info" class="form-help-text"></span>
+
         <label for="nome_cliente">Nome do Cliente:</label>
         <input type="text" id="nome_cliente" name="nome_cliente" required>
         
-        <label for="patrimonios">Patrimônios (separados por / ):</label>
-        <textarea id="patrimonios" name="patrimonios" rows="3" placeholder="Ex: Monitor DELL/Teclado Mecânico/Mouse Logitech" required></textarea>
-        
         <label for="numero_caixa">Número da Caixa:</label>
         <input type="text" id="numero_caixa" name="numero_caixa" required>
+
+        <hr>
+        <h4>Detalhes do Equipamento</h4>
+
+        <label for="codigo_patrimonio">Código do Patrimônio (Ex: 0443):</label>
+        <input type="text" id="codigo_patrimonio" name="codigo_patrimonio" required>
+
+        <label for="tipo_id">Tipo de Equipamento:</label>
+        <select id="tipo_id" name="tipo_id" required>
+            <option value="">Selecione um tipo</option>
+            {% for tipo in tipos %}
+                <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="marca_id">Marca:</label>
+        <select id="marca_id" name="marca_id" required disabled>
+            <option value="">Selecione um tipo primeiro</option>
+        </select>
+
+        <div id="tamanho-div" style="display: none;">
+            <label for="tamanho">Tamanho (para Freezers):</label>
+            <select id="tamanho" name="tamanho">
+                <option value="Pequeno">Pequeno</option>
+                <option value="Medio">Médio</option>
+                <option value="Grande">Grande</option>
+                <option value="Vertical">Vertical</option>
+            </select>
+        </div>
         
         <button type="submit"><i class="fas fa-plus"></i> Adicionar Patrimônio</button>
     </form>
 
-    <h2><i class="fas fa-boxes"></i> Patrimônios Existentes</h2>
+    <h2><i class="fas fa-users"></i> Clientes com Patrimônios</h2>
     
     <div class="in-page-search">
-        <form method="GET" action="{{ url_for('patrimonio_dashboard') }}" class="filter-form">
-            <div class="filter-controls">
-                <input type="text" name="search" placeholder="Buscar em todos os registros..." value="{{ search or '' }}">
-                <button type="submit" class="filter-btn"><i class="fas fa-search"></i> Buscar</button>
-                {% if search %}
-                <a href="{{ url_for('patrimonio_dashboard') }}" class="clear-btn">Limpar</a>
-                {% endif %}
-            </div>
+        <form method="GET" action="{{ url_for('patrimonio_dashboard') }}">
+            <input type="text" name="search" placeholder="Buscar por código, nome ou caixa..." value="{{ search or '' }}">
+            <button type="submit" class="filter-btn"><i class="fas fa-search"></i></button>
         </form>
     </div>
 
     <div class="table-wrapper">
-        {% if patrimonios %}
+        {% if clientes %}
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        {% if session.role == 'super_admin' %}
-                        <th>Empresa</th>
-                        {% endif %}
                         <th>Código Cliente</th>
                         <th>Nome Cliente</th>
-                        <th>Patrimônios</th>
-                        <th>Número da Caixa</th>
+                        <th>Nº Caixa</th>
+                        <th>Qtd. Patrimônios</th>
+                        {% if session.role == 'super_admin' %}<th>Empresa</th>{% endif %}
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody id="patrimonio-table-body">
-                    {% for item in patrimonios %}
-                        <tr data-id="{{ item.id }}">
-                            <td>{{ item.id }}</td>
-                            {% if session.role == 'super_admin' %}
-                            <td>{{ item.store_name or 'N/A' }}</td>
-                            {% endif %}
-                            <td>{{ item.codigo_cliente }}</td>
-                            <td>{{ item.nome_cliente }}</td>
-                            <td>{{ item.patrimonios }}</td>
-                            <td>{{ item.numero_caixa }}</td>
+                <tbody>
+                    {% for cliente in clientes %}
+                        <tr data-id="{{ cliente.id }}">
+                            <td>{{ cliente.codigo_cliente }}</td>
+                            <td>{{ cliente.nome_cliente }}</td>
+                            <td>{{ cliente.numero_caixa }}</td>
+                            <td>{{ cliente.patrimonio_count }}</td>
+                            {% if session.role == 'super_admin' %}<td>{{ cliente.store_name or 'N/A' }}</td>{% endif %}
                             <td class="actions">
-                                <a href="{{ url_for('patrimonio_edit', item_id=item.id) }}" title="Editar" class="edit"><i class="fas fa-edit"></i></a>
-                                <form action="{{ url_for('patrimonio_delete', item_id=item.id) }}" method="POST" style="display:inline;" data-is-ajax="true">
+                                <a href="{{ url_for('patrimonio_edit', cliente_id=cliente.id) }}" title="Editar" class="edit"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('patrimonio_delete', cliente_id=cliente.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este cliente e TODOS os seus patrimônios?');">
                                     <button type="submit" title="Excluir" class="delete"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>
@@ -92,7 +108,7 @@
                 </tbody>
             </table>
         {% else %}
-            <p>Nenhum patrimônio cadastrado ainda.</p>
+            <p style="text-align:center; padding: 20px;">Nenhum cliente com patrimônio encontrado.</p>
         {% endif %}
     </div>
 
