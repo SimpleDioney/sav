@@ -96,6 +96,29 @@ def role_required(allowed_roles):
     return decorator
 
 
+# --- Rotas de API ---
+@app.route('/api/cliente/<codigo_cliente>')
+@login_required
+def get_client_info(codigo_cliente):
+    db = get_db()
+    
+    # Define a store_id com base na sessão do usuário
+    store_id_clause = "store_id = ?"
+    params = [codigo_cliente, session.get('store_id')]
+    
+    # Se for super_admin, a consulta não deve filtrar por store_id
+    if session.get('role') == 'super_admin':
+        store_id_clause = "1=1" # Condição sempre verdadeira
+        params = [codigo_cliente]
+
+    client = db.execute(f"SELECT nome_cliente FROM patrimonios WHERE codigo_cliente = ? AND {store_id_clause}", params).fetchone()
+    
+    if client:
+        return jsonify({'status': 'success', 'nome_cliente': client['nome_cliente']})
+    else:
+        return jsonify({'status': 'not_found'}), 404
+
+
 # --- Rotas Principais e de Busca ---
 @app.route('/')
 def index():
@@ -503,25 +526,45 @@ def patrimonio_dashboard():
     db = get_db()
 
     if request.method == 'POST':
+        codigo_cliente = request.form['codigo_cliente']
+        nome_cliente = request.form['nome_cliente']
+        novos_patrimonios = request.form['patrimonios']
+        numero_caixa = request.form['numero_caixa']
         store_id = session.get('store_id') if session['role'] != 'super_admin' else request.form.get('store_id')
+
         if session['role'] == 'super_admin' and not store_id:
-            if is_ajax_request(): return jsonify({'status': 'error', 'message': 'Como Super Admin, você deve selecionar uma EMPRESA.'}), 400
             flash('Como Super Admin, você deve selecionar uma EMPRESA.', 'danger')
             return redirect(url_for('patrimonio_dashboard'))
-        
-        dados_novos = {'codigo_cliente': request.form['codigo_cliente'], 'nome_cliente': request.form['nome_cliente'], 'patrimonios': request.form['patrimonios'], 'numero_caixa': request.form['numero_caixa'], 'store_id': store_id}
-        cursor = db.cursor()
-        cursor.execute("INSERT INTO patrimonios (codigo_cliente, nome_cliente, patrimonios, numero_caixa, store_id) VALUES (?, ?, ?, ?, ?)", list(dados_novos.values()))
-        new_id = cursor.lastrowid
-        db.commit()
-        log_action('add_patrimonio', target_id=new_id, target_name=dados_novos['codigo_cliente'], dados_novos=dados_novos)
 
-        if is_ajax_request():
-            new_item = db.execute("SELECT p.*, s.name as store_name FROM patrimonios p LEFT JOIN stores s ON p.store_id = s.id WHERE p.id = ?", (new_id,)).fetchone()
-            return jsonify({'status': 'success', 'message': 'Patrimônio adicionado!', 'item': dict(new_item), 'page_type': 'patrimonio'})
-        flash('Patrimônio adicionado com sucesso!', 'success')
+        # ✅ LÓGICA DE UNIFICAÇÃO
+        existing_item = db.execute("SELECT * FROM patrimonios WHERE codigo_cliente = ? AND store_id = ?", (codigo_cliente, store_id)).fetchone()
+
+        if existing_item:
+            # Cliente existe -> Unificar patrimônios
+            patrimonios_atuais = existing_item['patrimonios']
+            patrimonios_unificados = f"{patrimonios_atuais} / {novos_patrimonios}"
+            
+            dados_antigos = dict(existing_item)
+            dados_novos = {'patrimonios': patrimonios_unificados, 'numero_caixa': numero_caixa}
+
+            db.execute("UPDATE patrimonios SET patrimonios = ?, numero_caixa = ? WHERE id = ?", 
+                       (patrimonios_unificados, numero_caixa, existing_item['id']))
+            db.commit()
+            log_action('unify_patrimonio', target_id=existing_item['id'], target_name=codigo_cliente, dados_antigos=dados_antigos, dados_novos=dados_novos)
+            flash(f'Patrimônio adicionado ao cliente existente "{nome_cliente}" com sucesso!', 'success')
+        else:
+            # Cliente não existe -> Criar novo
+            dados_novos = {'codigo_cliente': codigo_cliente, 'nome_cliente': nome_cliente, 'patrimonios': novos_patrimonios, 'numero_caixa': numero_caixa, 'store_id': store_id}
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO patrimonios (codigo_cliente, nome_cliente, patrimonios, numero_caixa, store_id) VALUES (?, ?, ?, ?, ?)", list(dados_novos.values()))
+            new_id = cursor.lastrowid
+            db.commit()
+            log_action('add_patrimonio', target_id=new_id, target_name=codigo_cliente, dados_novos=dados_novos)
+            flash('Novo patrimônio adicionado com sucesso!', 'success')
+
         return redirect(url_for('patrimonio_dashboard'))
 
+    # Lógica GET (exibição da página)
     params = []
     where_clauses = []
 
@@ -808,7 +851,7 @@ def cobranca_dashboard():
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
     offset = (page - 1) * PER_PAGE
     # ✅ ORDENAÇÃO AUTOMÁTICA APLICADA AQUI
-    items = db.execute(f"SELECT f.*, s.name as store_name {base_query} ORDER BY f.caixa ASC, f.range_cliente_inicio ASC LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
+    items = db.execute(f"SELECT f.*, s.name as store_name {base_query} ORDER BY CAST(f.caixa as INTEGER) ASC, f.range_cliente_inicio ASC LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
     
     if is_ajax_request() and request.method == 'GET':
         return jsonify({
@@ -876,7 +919,7 @@ def cobranca_export_csv():
         query += " WHERE f.store_id = ?"
         params.append(session.get('store_id'))
     
-    items = db.execute(query + " ORDER BY f.caixa ASC, f.range_cliente_inicio ASC", params).fetchall()
+    items = db.execute(query + " ORDER BY CAST(f.caixa as INTEGER) ASC, f.range_cliente_inicio ASC", params).fetchall()
     output = io.StringIO()
     writer = csv.writer(output)
     

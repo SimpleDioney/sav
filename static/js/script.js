@@ -2,7 +2,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Delegação de eventos para ações AJAX
     document.body.addEventListener('submit', function(event) {
         const form = event.target;
-        if (form.matches('form[data-ajax="true"]')) {
+        // Se o formulário for o de patrimônio, não usa AJAX para permitir o reload da página
+        if (form.matches('form[data-ajax="true"]') && form.id !== 'patrimonio-form') {
             event.preventDefault();
             handleFormSubmit(form);
         }
@@ -10,20 +11,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.body.addEventListener('click', function(event) {
         const link = event.target.closest('a');
-        // Manipula cliques nos links de paginação
         if (link && link.matches('.pagination a')) {
-            // A paginação na página de busca não será AJAX
-            if (document.body.dataset.pageType === 'search-results') {
-                return;
-            }
-            // Não interceptar paginação se houver uma busca no servidor
-            if (new URL(link.href).searchParams.has('search')) {
+            if (document.body.dataset.pageType === 'search-results' || new URL(link.href).searchParams.has('search')) {
                 return;
             }
             event.preventDefault();
             handlePaginationClick(link);
         }
     });
+
+    // Lógica para autocompletar nome do cliente no formulário de patrimônio
+    const codigoClienteInput = document.getElementById('codigo_cliente');
+    if (codigoClienteInput) {
+        codigoClienteInput.addEventListener('blur', async function() {
+            const codigo = this.value.trim();
+            const nomeClienteInput = document.getElementById('nome_cliente');
+            const clienteInfoSpan = document.getElementById('cliente-info');
+            const scriptRoot = document.body.dataset.scriptName || '';
+
+            if (codigo) {
+                try {
+                    const response = await fetch(`${scriptRoot}/api/cliente/${codigo}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        nomeClienteInput.value = data.nome_cliente;
+                        nomeClienteInput.readOnly = true;
+                        clienteInfoSpan.textContent = 'Cliente encontrado. Os novos patrimônios serão adicionados a este cliente.';
+                    } else {
+                        nomeClienteInput.value = '';
+                        nomeClienteInput.readOnly = false;
+                        clienteInfoSpan.textContent = 'Novo cliente. Preencha o nome.';
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar cliente:', error);
+                    clienteInfoSpan.textContent = 'Erro ao buscar dados do cliente.';
+                }
+            } else {
+                nomeClienteInput.value = '';
+                nomeClienteInput.readOnly = false;
+                clienteInfoSpan.textContent = '';
+            }
+        });
+    }
 });
 
 /**
@@ -144,7 +173,6 @@ function createTableRow(item, pageType, scriptRoot) {
             break;
         case 'cobranca':
              cells = `
-                <td class="drag-handle"><i class="fas fa-grip-vertical"></i></td>
                 <td>${item.id}</td>
                 ${isSuperAdmin ? `<td>${item.store_name || 'N/A'}</td>` : ''}
                 <td>${item.ficha_acerto}</td>
