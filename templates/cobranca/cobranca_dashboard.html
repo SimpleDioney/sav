@@ -40,8 +40,15 @@
     <h2><i class="fas fa-list-ol"></i> Fichas de Acerto Existentes</h2>
     
     <div class="in-page-search">
-        <input type="text" id="table-search" onkeyup="filterTable()" placeholder="Buscar na tabela...">
-        
+        <form method="GET" action="{{ url_for('cobranca_dashboard') }}" class="filter-form">
+            <div class="filter-controls">
+                <input type="text" name="search" placeholder="Buscar em todos os registros..." value="{{ search or '' }}">
+                <button type="submit" class="filter-btn"><i class="fas fa-search"></i> Buscar</button>
+                {% if search %}
+                <a href="{{ url_for('cobranca_dashboard') }}" class="clear-btn">Limpar</a>
+                {% endif %}
+            </div>
+        </form>
     </div>
 
     <div class="table-wrapper">

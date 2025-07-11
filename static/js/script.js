@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (document.body.dataset.pageType === 'search-results') {
                 return;
             }
+            // Não interceptar paginação se houver uma busca no servidor
+            if (new URL(link.href).searchParams.has('search')) {
+                return;
+            }
             event.preventDefault();
             handlePaginationClick(link);
         }
@@ -223,22 +227,4 @@ function displayFlashMessage(message, category) {
         messageLi.style.opacity = '0';
         setTimeout(() => messageLi.remove(), 500);
     }, 5000);
-}
-
-/**
- * Filtra as linhas de uma tabela com base no texto digitado.
- */
-function filterTable() {
-    const input = document.getElementById("table-search");
-    const filter = input.value.toUpperCase();
-    const table = document.querySelector(".table-wrapper table");
-    if (!table) return;
-
-    const trs = table.getElementsByTagName("tr");
-    for (let i = 1; i < trs.length; i++) {
-        const row = trs[i];
-        row.style.display = Array.from(row.cells).some(cell => 
-            cell.textContent.toUpperCase().includes(filter)
-        ) ? "" : "none";
-    }
 }

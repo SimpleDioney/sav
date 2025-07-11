@@ -319,6 +319,7 @@ def user_edit(user_id):
 def user_management():
     db = get_db()
     page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('search', '').strip()
 
     if request.method == 'POST':
         username = request.form['username'].strip()
@@ -349,13 +350,33 @@ def user_management():
                 flash(f'Erro: Usuário "{username}" já existe.', 'danger')
         return redirect(url_for('user_management'))
 
-    total_items = db.execute("SELECT COUNT(id) FROM users").fetchone()[0]
+    params = []
+    where_clauses = []
+    if search_query:
+        search_term = f"%{search_query}%"
+        search_clauses = ["u.username LIKE ?", "u.role LIKE ?", "s.name LIKE ?"]
+        where_clauses.append(f"({' OR '.join(search_clauses)})")
+        params.extend([search_term] * len(search_clauses))
+    
+    base_query = "FROM users u LEFT JOIN stores s ON u.store_id = s.id"
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
+
+    total_items = db.execute(f"SELECT COUNT(u.id) {base_query}", params).fetchone()[0]
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
     offset = (page - 1) * PER_PAGE
 
-    users = db.execute("SELECT u.*, s.name as store_name FROM users u LEFT JOIN stores s ON u.store_id = s.id ORDER BY u.username LIMIT ? OFFSET ?", (PER_PAGE, offset)).fetchall()
+    users = db.execute(f"SELECT u.*, s.name as store_name {base_query} ORDER BY u.username LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall()
-    return render_template('super_admin/user_management.html', users=users, stores=stores, page=page, total_pages=total_pages)
+    
+    if is_ajax_request() and request.method == 'GET':
+        return jsonify({
+            'items': [dict(r) for r in users],
+            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
+            'page_type': 'user_management'
+        })
+        
+    return render_template('super_admin/user_management.html', users=users, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
 
 @app.route('/super_admin/users/delete/<int:user_id>', methods=['POST'])
@@ -385,6 +406,7 @@ def delete_user(user_id):
 def manage_stores():
     db = get_db()
     page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('search', '').strip()
 
     if request.method == 'POST':
         store_name = request.form.get('name', '').strip()
@@ -413,21 +435,39 @@ def manage_stores():
                 flash(f'Erro: A EMPRESA "{store_name}" já existe.', 'danger')
         return redirect(url_for('manage_stores'))
 
-    total_items = db.execute("SELECT COUNT(id) FROM stores").fetchone()[0]
+    params = []
+    where_clauses = []
+    if search_query:
+        search_term = f"%{search_query}%"
+        search_clauses = ["s.name LIKE ?", "sd.department_role LIKE ?"]
+        where_clauses.append(f"({' OR '.join(search_clauses)})")
+        params.extend([search_term] * len(search_clauses))
+
+    base_query = "FROM stores s LEFT JOIN store_departments sd ON s.id = sd.store_id"
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
+    
+    # Use subquery to count distinct stores
+    count_query = f"SELECT COUNT(DISTINCT s.id) FROM stores s LEFT JOIN store_departments sd ON s.id = sd.store_id"
+    if where_clauses:
+        count_query += " WHERE " + " AND ".join(where_clauses)
+
+    total_items = db.execute(count_query, params).fetchone()[0]
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
     offset = (page - 1) * PER_PAGE
 
-    stores_data = db.execute("SELECT s.id, s.name, GROUP_CONCAT(sd.department_role, ', ') as departments FROM stores s LEFT JOIN store_departments sd ON s.id = sd.store_id GROUP BY s.id, s.name ORDER BY s.name LIMIT ? OFFSET ?", (PER_PAGE, offset)).fetchall()
+    query = f"SELECT s.id, s.name, GROUP_CONCAT(sd.department_role, ', ') as departments {base_query} GROUP BY s.id, s.name ORDER BY s.name LIMIT ? OFFSET ?"
+    stores_data = db.execute(query, params + [PER_PAGE, offset]).fetchall()
     
-    if is_ajax_request():
+    if is_ajax_request() and request.method == 'GET':
         return jsonify({
             'items': [dict(r) for r in stores_data],
-            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, request=request),
+            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
             'page_type': 'manage_stores'
         })
 
     available_departments = ['admin_rh', 'admin_patrimonio', 'admin_contas_a_pagar', 'admin_cobranca']
-    return render_template('super_admin/manage_stores.html', stores=stores_data, available_departments=available_departments, page=page, total_pages=total_pages)
+    return render_template('super_admin/manage_stores.html', stores=stores_data, available_departments=available_departments, page=page, total_pages=total_pages, search=search_query)
 
 
 @app.route('/super_admin/stores/delete/<int:store_id>', methods=['POST'])
@@ -457,6 +497,7 @@ def delete_store(store_id):
 @role_required(['super_admin', 'admin_patrimonio'])
 def patrimonio_dashboard():
     page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('search', '').strip()
     db = get_db()
 
     if request.method == 'POST':
@@ -479,26 +520,40 @@ def patrimonio_dashboard():
         flash('Patrimônio adicionado com sucesso!', 'success')
         return redirect(url_for('patrimonio_dashboard'))
 
-    base_query = "FROM patrimonios p LEFT JOIN stores s ON p.store_id = s.id"
     params = []
+    where_clauses = []
+
     if session['role'] != 'super_admin':
-        base_query += " WHERE p.store_id = ?"
+        where_clauses.append("p.store_id = ?")
         params.append(session.get('store_id'))
+
+    if search_query:
+        search_term = f"%{search_query}%"
+        search_clauses_list = ["p.codigo_cliente LIKE ?", "p.nome_cliente LIKE ?", "p.patrimonios LIKE ?", "p.numero_caixa LIKE ?"]
+        if session['role'] == 'super_admin':
+            search_clauses_list.append("s.name LIKE ?")
+        
+        where_clauses.append(f"({' OR '.join(search_clauses_list)})")
+        params.extend([search_term] * len(search_clauses_list))
+
+    base_query = "FROM patrimonios p LEFT JOIN stores s ON p.store_id = s.id"
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
 
     total_items = db.execute(f"SELECT COUNT(p.id) {base_query}", params).fetchone()[0]
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
     offset = (page - 1) * PER_PAGE
     items = db.execute(f"SELECT p.*, s.name as store_name {base_query} ORDER BY p.id DESC LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
 
-    if is_ajax_request():
+    if is_ajax_request() and request.method == 'GET':
         return jsonify({
             'items': [dict(r) for r in items],
-            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, request=request),
+            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
             'page_type': 'patrimonio'
         })
 
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
-    return render_template('patrimonio/patrimonio_dashboard.html', patrimonios=items, stores=stores, page=page, total_pages=total_pages)
+    return render_template('patrimonio/patrimonio_dashboard.html', patrimonios=items, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
 
 @app.route('/patrimonio/delete/<int:item_id>', methods=['POST'])
@@ -578,6 +633,7 @@ def rh_dashboard():
 @role_required(['super_admin', 'admin_contas_a_pagar'])
 def contas_a_pagar_dashboard():
     page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('search', '').strip()
     db = get_db()
 
     if request.method == 'POST':
@@ -603,11 +659,26 @@ def contas_a_pagar_dashboard():
         flash('Pagamento adicionado com sucesso!', 'success')
         return redirect(url_for('contas_a_pagar_dashboard'))
 
-    base_query = "FROM contas_a_pagar_pagamentos p LEFT JOIN stores s ON p.store_id = s.id"
     params = []
+    where_clauses = []
+
     if session['role'] != 'super_admin':
-        base_query += " WHERE p.store_id = ?"
+        where_clauses.append("p.store_id = ?")
         params.append(session.get('store_id'))
+
+    if search_query:
+        search_term = f"%{search_query}%"
+        search_clauses_list = ["p.caixa LIKE ?", "p.pagamento_data_inicio LIKE ?", "p.pagamento_data_fim LIKE ?"]
+        if session['role'] == 'super_admin':
+            search_clauses_list.append("s.name LIKE ?")
+        
+        where_clauses.append(f"({' OR '.join(search_clauses_list)})")
+        params.extend([search_term] * len(search_clauses_list))
+
+    base_query = "FROM contas_a_pagar_pagamentos p LEFT JOIN stores s ON p.store_id = s.id"
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
+
 
     total_items = db.execute(f"SELECT COUNT(p.id) {base_query}", params).fetchone()[0]
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
@@ -623,15 +694,15 @@ def contas_a_pagar_dashboard():
         except (ValueError, TypeError): pass
         items_formatted.append(item_dict)
 
-    if is_ajax_request():
+    if is_ajax_request() and request.method == 'GET':
         return jsonify({
             'items': items_formatted,
-            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, request=request),
+            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
             'page_type': 'contas_a_pagar_pagamentos'
         })
 
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
-    return render_template('contas_a_pagar/contas_a_pagar_dashboard.html', pagamentos=items_formatted, stores=stores, page=page, total_pages=total_pages)
+    return render_template('contas_a_pagar/contas_a_pagar_dashboard.html', pagamentos=items_formatted, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
 
 @app.route('/contas_a_pagar/pagamentos/delete/<int:item_id>', methods=['POST'])
@@ -680,6 +751,7 @@ def contas_a_pagar_pagamentos_edit(item_id):
 @role_required(['super_admin', 'admin_cobranca'])
 def cobranca_dashboard():
     page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('search', '').strip()
     db = get_db()
 
     if request.method == 'POST':
@@ -708,26 +780,41 @@ def cobranca_dashboard():
             flash('Os campos de range de cliente devem ser números.', 'danger')
         return redirect(url_for('cobranca_dashboard'))
 
-    base_query = "FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id"
     params = []
+    where_clauses = []
+
     if session['role'] != 'super_admin':
-        base_query += " WHERE f.store_id = ?"
+        where_clauses.append("f.store_id = ?")
         params.append(session.get('store_id'))
+
+    if search_query:
+        search_term = f"%{search_query}%"
+        search_clauses_list = ["f.ficha_acerto LIKE ?", "f.caixa LIKE ?", "f.range_cliente_inicio LIKE ?", "f.range_cliente_fim LIKE ?"]
+        if session['role'] == 'super_admin':
+            search_clauses_list.append("s.name LIKE ?")
+        
+        where_clauses.append(f"({' OR '.join(search_clauses_list)})")
+        params.extend([search_term] * len(search_clauses_list))
+
+    base_query = "FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id"
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
+
 
     total_items = db.execute(f"SELECT COUNT(f.id) {base_query}", params).fetchone()[0]
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
     offset = (page - 1) * PER_PAGE
     items = db.execute(f"SELECT f.*, s.name as store_name {base_query} ORDER BY f.order_position ASC LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
     
-    if is_ajax_request():
+    if is_ajax_request() and request.method == 'GET':
         return jsonify({
             'items': [dict(r) for r in items],
-            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, request=request),
+            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, search=search_query, request=request),
             'page_type': 'cobranca'
         })
     
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
-    return render_template('cobranca/cobranca_dashboard.html', fichas_acerto=items, stores=stores, page=page, total_pages=total_pages)
+    return render_template('cobranca/cobranca_dashboard.html', fichas_acerto=items, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
 
 @app.route('/cobranca/fichas_acerto/delete/<int:item_id>', methods=['POST'])
@@ -802,6 +889,7 @@ def cobranca_export_csv():
 @role_required(['super_admin', 'admin_contas_a_pagar'])
 def documentos_diversos_dashboard():
     page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('search', '').strip()
     db = get_db()
 
     if request.method == 'POST':
@@ -824,26 +912,40 @@ def documentos_diversos_dashboard():
         flash('Documento diverso adicionado com sucesso!', 'success')
         return redirect(url_for('documentos_diversos_dashboard'))
 
-    base_query = "FROM contas_a_pagar_diversos d LEFT JOIN stores s ON d.store_id = s.id"
     params = []
+    where_clauses = []
+
     if session['role'] != 'super_admin':
-        base_query += " WHERE d.store_id = ?"
+        where_clauses.append("d.store_id = ?")
         params.append(session.get('store_id'))
+
+    if search_query:
+        search_term = f"%{search_query}%"
+        search_clauses_list = ["d.numero_caixa LIKE ?"]
+        if session['role'] == 'super_admin':
+            search_clauses_list.append("s.name LIKE ?")
+        
+        where_clauses.append(f"({' OR '.join(search_clauses_list)})")
+        params.extend([search_term] * len(search_clauses_list))
+
+    base_query = "FROM contas_a_pagar_diversos d LEFT JOIN stores s ON d.store_id = s.id"
+    if where_clauses:
+        base_query += " WHERE " + " AND ".join(where_clauses)
 
     total_items = db.execute(f"SELECT COUNT(d.id) {base_query}", params).fetchone()[0]
     total_pages = (total_items + PER_PAGE - 1) // PER_PAGE if total_items > 0 else 1
     offset = (page - 1) * PER_PAGE
     items = db.execute(f"SELECT d.*, s.name as store_name {base_query} ORDER BY d.id DESC LIMIT ? OFFSET ?", params + [PER_PAGE, offset]).fetchall()
     
-    if is_ajax_request():
+    if is_ajax_request() and request.method == 'GET':
         return jsonify({
             'items': [dict(r) for r in items],
-            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, request=request),
+            'pagination_html': render_template('_pagination.html', page=page, total_pages=total_pages, request=request, search=search_query),
             'page_type': 'contas_a_pagar_diversos'
         })
     
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
-    return render_template('contas_a_pagar/documentos_diversos_dashboard.html', documentos_diversos=items, stores=stores, page=page, total_pages=total_pages)
+    return render_template('contas_a_pagar/documentos_diversos_dashboard.html', documentos_diversos=items, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
 
 @app.route('/contas_a_pagar/documentos_diversos/delete/<int:item_id>', methods=['POST'])
