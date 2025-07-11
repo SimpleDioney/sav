@@ -122,6 +122,7 @@ async function handlePaginationClick(link) {
  */
 function createTableRow(item, pageType) {
     const isSuperAdmin = document.body.dataset.isSuperAdmin === 'true';
+    const scriptName = document.body.dataset.scriptName || ''; // Pega o prefixo da URL
     let cells = '';
     
     let editUrl, deleteUrl;
@@ -137,8 +138,8 @@ function createTableRow(item, pageType) {
                 <td>${item.patrimonios}</td>
                 <td>${item.numero_caixa}</td>
             `;
-            editUrl = `/patrimonio/edit/${item.id}`;
-            deleteUrl = `/patrimonio/delete/${item.id}`;
+            editUrl = `${scriptName}/patrimonio/edit/${item.id}`;
+            deleteUrl = `${scriptName}/patrimonio/delete/${item.id}`;
             break;
         case 'cobranca':
              cells = `
@@ -149,8 +150,8 @@ function createTableRow(item, pageType) {
                 <td>${item.caixa}</td>
                 <td>${item.range_cliente_inicio} - ${item.range_cliente_fim}</td>
             `;
-            editUrl = `/cobranca/fichas_acerto/edit/${item.id}`;
-            deleteUrl = `/cobranca/fichas_acerto/delete/${item.id}`;
+            editUrl = `${scriptName}/cobranca/fichas_acerto/edit/${item.id}`;
+            deleteUrl = `${scriptName}/cobranca/fichas_acerto/delete/${item.id}`;
             break;
         case 'contas_a_pagar_pagamentos':
             cells = `
@@ -160,8 +161,8 @@ function createTableRow(item, pageType) {
                 <td>${item.pagamento_data_fim}</td>
                 <td>${item.caixa}</td>
             `;
-            editUrl = `/contas_a_pagar/pagamentos/edit/${item.id}`;
-            deleteUrl = `/contas_a_pagar/pagamentos/delete/${item.id}`;
+            editUrl = `${scriptName}/contas_a_pagar/pagamentos/edit/${item.id}`;
+            deleteUrl = `${scriptName}/contas_a_pagar/pagamentos/delete/${item.id}`;
             break;
         case 'contas_a_pagar_diversos':
             cells = `
@@ -169,8 +170,8 @@ function createTableRow(item, pageType) {
                 ${isSuperAdmin ? `<td>${item.store_name || 'N/A'}</td>` : ''}
                 <td>${item.numero_caixa}</td>
             `;
-            editUrl = `/contas_a_pagar/documentos_diversos/edit/${item.id}`;
-            deleteUrl = `/contas_a_pagar/documentos_diversos/delete/${item.id}`;
+            editUrl = `${scriptName}/contas_a_pagar/documentos_diversos/edit/${item.id}`;
+            deleteUrl = `${scriptName}/contas_a_pagar/documentos_diversos/delete/${item.id}`;
             break;
         case 'user_management':
             cells = `
@@ -180,8 +181,8 @@ function createTableRow(item, pageType) {
                 <td>${item.store_name || 'N/A'}</td>
                 <td>${item.can_add_users ? 'Sim' : 'Não'}</td>
             `;
-            editUrl = `/super_admin/users/edit/${item.id}`;
-            deleteUrl = `/super_admin/users/delete/${item.id}`;
+            editUrl = `${scriptName}/super_admin/users/edit/${item.id}`;
+            deleteUrl = `${scriptName}/super_admin/users/delete/${item.id}`;
             break;
         case 'manage_stores':
             cells = `
@@ -189,7 +190,7 @@ function createTableRow(item, pageType) {
                 <td>${item.name}</td>
                 <td>${(item.departments || 'Nenhum').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
             `;
-            deleteUrl = `/super_admin/stores/delete/${item.id}`;
+            deleteUrl = `${scriptName}/super_admin/stores/delete/${item.id}`;
             break;
     }
 
