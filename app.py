@@ -557,6 +557,84 @@ def manage_marcas():
     
     return render_template('super_admin/manage_marcas.html', tipos=tipos, marcas=marcas)
 
+@app.route('/super_admin/manage_attributes')
+@login_required
+@role_required(['super_admin'])
+def manage_attributes():
+    db = get_db()
+    tipos = db.execute("SELECT * FROM tipos_equipamento ORDER BY nome").fetchall()
+    marcas = db.execute("""
+        SELECT m.id, m.nome, t.nome as tipo_nome
+        FROM marcas m 
+        JOIN tipos_equipamento t ON m.tipo_id = t.id 
+        ORDER BY t.nome, m.nome
+    """).fetchall()
+    tamanhos = db.execute("SELECT * FROM tamanhos ORDER BY nome").fetchall()
+    
+    return render_template('super_admin/manage_attributes.html', tipos=tipos, marcas=marcas, tamanhos=tamanhos)
+
+# NOVAS ROTAS PARA ADICIONAR E EXCLUIR
+@app.route('/super_admin/tipos/add', methods=['POST'])
+@login_required
+@role_required(['super_admin'])
+def add_tipo():
+    nome_tipo = request.form.get('nome_tipo')
+    if nome_tipo:
+        try:
+            db = get_db()
+            db.execute("INSERT INTO tipos_equipamento (nome) VALUES (?)", (nome_tipo,))
+            db.commit()
+            flash(f'Tipo "{nome_tipo}" adicionado com sucesso!', 'success')
+        except sqlite3.IntegrityError:
+            flash(f'O tipo "{nome_tipo}" já existe.', 'danger')
+    else:
+        flash('O nome do tipo não pode ser vazio.', 'danger')
+    return redirect(url_for('manage_attributes'))
+
+@app.route('/super_admin/marcas/add', methods=['POST'])
+@login_required
+@role_required(['super_admin'])
+def add_marca():
+    nome_marca = request.form.get('nome_marca')
+    tipo_id = request.form.get('tipo_id')
+    if nome_marca and tipo_id:
+        db = get_db()
+        db.execute("INSERT INTO marcas (nome, tipo_id) VALUES (?, ?)", (nome_marca, tipo_id))
+        db.commit()
+        flash('Marca adicionada com sucesso!', 'success')
+    else:
+        flash('Nome da marca e tipo são obrigatórios.', 'danger')
+    return redirect(url_for('manage_attributes'))
+
+@app.route('/super_admin/tamanhos/add', methods=['POST'])
+@login_required
+@role_required(['super_admin'])
+def add_tamanho():
+    nome_tamanho = request.form.get('nome_tamanho')
+    if nome_tamanho:
+        try:
+            db = get_db()
+            db.execute("INSERT INTO tamanhos (nome) VALUES (?)", (nome_tamanho,))
+            db.commit()
+            flash(f'Tamanho "{nome_tamanho}" adicionado com sucesso!', 'success')
+        except sqlite3.IntegrityError:
+            flash(f'O tamanho "{nome_tamanho}" já existe.', 'danger')
+    else:
+        flash('O nome do tamanho não pode ser vazio.', 'danger')
+    return redirect(url_for('manage_attributes'))
+
+
+@app.route('/super_admin/tipos/delete/<int:tipo_id>', methods=['POST'])
+@login_required
+@role_required(['super_admin'])
+def delete_tipo(tipo_id):
+    db = get_db()
+    # A exclusão em cascata (ON DELETE CASCADE) no DB irá remover as marcas associadas.
+    db.execute("DELETE FROM tipos_equipamento WHERE id = ?", (tipo_id,))
+    db.commit()
+    flash('Tipo removido com sucesso.', 'success')
+    return redirect(url_for('manage_attributes'))
+
 @app.route('/super_admin/marcas/delete/<int:marca_id>', methods=['POST'])
 @login_required
 @role_required(['super_admin'])
@@ -565,8 +643,17 @@ def delete_marca(marca_id):
     db.execute("DELETE FROM marcas WHERE id = ?", (marca_id,))
     db.commit()
     flash('Marca removida com sucesso!', 'success')
-    return redirect(url_for('manage_marcas'))
+    return redirect(url_for('manage_attributes'))
 
+@app.route('/super_admin/tamanhos/delete/<int:tamanho_id>', methods=['POST'])
+@login_required
+@role_required(['super_admin'])
+def delete_tamanho(tamanho_id):
+    db = get_db()
+    db.execute("DELETE FROM tamanhos WHERE id = ?", (tamanho_id,))
+    db.commit()
+    flash('Tamanho removido com sucesso!', 'success')
+    return redirect(url_for('manage_attributes'))
 
 # --- Rotas de Patrimônio ---
 @app.route('/patrimonio/dashboard', methods=['GET', 'POST'])

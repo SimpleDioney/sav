@@ -69,6 +69,12 @@ def init_db():
             FOREIGN KEY (tipo_id) REFERENCES tipos_equipamento(id) ON DELETE CASCADE
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tamanhos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT UNIQUE NOT NULL
+        )
+    ''')
     
     # ✅ Tabela de patrimônio com o novo campo 'codigo_patrimonio'
     cursor.execute('''
