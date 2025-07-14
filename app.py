@@ -728,8 +728,10 @@ def patrimonio_dashboard():
 
     tipos = db.execute("SELECT * FROM tipos_equipamento ORDER BY nome").fetchall()
     stores = db.execute("SELECT * FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
+    tamanhos = db.execute("SELECT * FROM tamanhos ORDER BY nome").fetchall()
+    stores = db.execute("SELECT * FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
 
-    return render_template('patrimonio/patrimonio_dashboard.html', clientes=clientes_list, tipos=tipos, stores=stores, page=page, total_pages=total_pages, search=search_query)
+    return render_template('patrimonio/patrimonio_dashboard.html', clientes=clientes_list, tipos=tipos, tamanhos=tamanhos, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
 @app.route('/patrimonio/delete/<int:cliente_id>', methods=['POST'])
 @login_required

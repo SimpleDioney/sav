@@ -19,6 +19,7 @@ def init_db():
     db = get_db()
     cursor = db.cursor()
 
+    # --- Criação das Tabelas (sem alterações aqui) ---
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS stores (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,8 +76,6 @@ def init_db():
             nome TEXT UNIQUE NOT NULL
         )
     ''')
-    
-    # ✅ Tabela de patrimônio com o novo campo 'codigo_patrimonio'
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS patrimonio_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,8 +90,6 @@ def init_db():
             FOREIGN KEY (marca_id) REFERENCES marcas(id)
         )
     ''')
-
-    # ... (Restante das tabelas: contas_a_pagar, cobranca, audit_log) ...
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS contas_a_pagar_pagamentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,11 +136,21 @@ def init_db():
         )
     ''')
 
-    # Inserção dos dados iniciais
+    # ✅ CORREÇÃO DEFINITIVA:
+    # Este comando cria o índice único na tabela 'marcas' se ele não existir.
+    # Isso garante que, mesmo em um banco de dados antigo, a regra de não duplicação seja aplicada.
+    cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_marcas_nome_tipo ON marcas (nome, tipo_id);")
+
+    # --- Inserção Segura dos Dados Iniciais ---
+    
+    # Insere os tipos e salva (commit) para garantir que estejam disponíveis para a próxima etapa.
     tipos = ['Freezer', 'Forno', 'Estufa']
     for tipo in tipos:
         cursor.execute("INSERT OR IGNORE INTO tipos_equipamento (nome) VALUES (?)", (tipo,))
+    db.commit() 
     
+    # Agora, insere as marcas. O comando 'INSERT OR IGNORE' vai falhar silenciosamente
+    # se a marca já existir, pois agora o índice único (idx_marcas_nome_tipo) existe.
     freezer_id_result = cursor.execute("SELECT id FROM tipos_equipamento WHERE nome = 'Freezer'").fetchone()
     if freezer_id_result:
         freezer_id = freezer_id_result[0]
@@ -151,15 +158,15 @@ def init_db():
         for marca in marcas_freezer:
             cursor.execute("INSERT OR IGNORE INTO marcas (nome, tipo_id) VALUES (?, ?)", (marca, freezer_id))
 
-    db.commit()
-
     # Adiciona usuário SUPER ADMIN padrão
     cursor.execute("SELECT * FROM users WHERE username = 'Dioney'")
     if cursor.fetchone() is None:
         hashed_password = generate_password_hash('Dioney13')
         cursor.execute("INSERT INTO users (username, password, role, can_add_users, store_id) VALUES (?, ?, ?, ?, NULL)",
                        ('Dioney', hashed_password, 'super_admin', 1))
-        db.commit()
+    
+    # Salva todas as alterações pendentes
+    db.commit()
 
 def init_app(app):
     app.teardown_appcontext(close_db)

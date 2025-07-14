@@ -57,10 +57,10 @@
         <div id="tamanho-div" style="display: none;">
             <label for="tamanho">Tamanho (para Freezers):</label>
             <select id="tamanho" name="tamanho">
-                <option value="Pequeno">Pequeno</option>
-                <option value="Medio">Médio</option>
-                <option value="Grande">Grande</option>
-                <option value="Vertical">Vertical</option>
+                <option value="">Selecione um tamanho</option>
+                {% for tamanho in tamanhos %}
+                    <option value="{{ tamanho.nome }}">{{ tamanho.nome }}</option>
+                {% endfor %}
             </select>
         </div>
         
