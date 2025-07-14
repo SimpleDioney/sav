@@ -7,12 +7,57 @@ from datetime import datetime
 import json
 import io
 import csv
+import os
+
+import firebase_admin
+from firebase_admin import credentials, db
+
+try:
+    # Constrói um caminho absoluto para o arquivo de credenciais
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    credentials_path = os.path.join(base_dir, 'firebase-credentials.json')
+
+    # Verifica se o arquivo realmente existe antes de tentar usá-lo
+    if not os.path.exists(credentials_path):
+        raise FileNotFoundError(f"O arquivo de credenciais não foi encontrado em: {credentials_path}")
+
+    cred = credentials.Certificate(credentials_path)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://desativar-site-default-rtdb.firebaseio.com/'
+    })
+    print("Firebase inicializado com sucesso.")
+except Exception as e:
+    print(f"ERRO: Não foi possível inicializar o Firebase. Verifique o arquivo 'firebase-credentials.json' e a URL. Erro: {e}")
 
 app = Flask(__name__)
 app.secret_key = '09164Duque!Paprika'
 PER_PAGE = 20  # Itens por página para paginação
 
 app.jinja_env.add_extension('jinja2.ext.do')
+
+@app.before_request
+def check_for_maintenance():
+    # Ignora a verificação para as rotas estáticas (CSS, JS) e para a própria página de manutenção
+    # Isso previne um loop infinito de redirecionamento.
+    if request.endpoint and request.endpoint not in ['static', 'maintenance']:
+        try:
+            # Pega a referência do nosso "interruptor" no Firebase
+            maintenance_ref = db.reference('config/is_maintenance_mode')
+            is_maintenance = maintenance_ref.get()
+
+            # Se o valor for True, exibe a página de manutenção
+            if is_maintenance:
+                return render_template('maintenance.html'), 503 # HTTP 503: Serviço Indisponível
+        except Exception as e:
+            # Se der erro ao conectar com o Firebase, o site continua funcionando por segurança.
+            # É bom registrar esse erro para depuração.
+            print(f"AVISO: Não foi possível verificar o modo de manutenção no Firebase. O site continuará online. Erro: {e}")
+
+# Rota necessária para que o `render_template` funcione dentro do `check_for_maintenance`
+@app.route('/maintenance')
+def maintenance():
+    return render_template('maintenance.html'), 503
+# --- FIM DO VERIFICADOR ---
 
 # --- Filtros Personalizados para Templates ---
 @app.template_filter('datetime')
