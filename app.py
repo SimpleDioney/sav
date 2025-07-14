@@ -165,12 +165,13 @@ def search():
         elif search_by == 'patrimonio_especifico':
             # ✅ CORREÇÃO APLICADA AQUI
             # A busca agora é feita na coluna correta: 'codigo_patrimonio'
+            # E utiliza LEFT JOIN para garantir que itens sem tipo ou marca apareçam.
             items = db.execute("""
                 SELECT c.*, t.nome as tipo, m.nome as marca, pi.tamanho, pi.codigo_patrimonio
                 FROM clientes c
                 JOIN patrimonio_items pi ON c.id = pi.cliente_id
-                JOIN tipos_equipamento t ON pi.tipo_id = t.id
-                JOIN marcas m ON pi.marca_id = m.id
+                LEFT JOIN tipos_equipamento t ON pi.tipo_id = t.id
+                LEFT JOIN marcas m ON pi.marca_id = m.id
                 WHERE pi.codigo_patrimonio LIKE ?
             """, (query_term,)).fetchall()
             all_results = items
