@@ -347,3 +347,32 @@ table tbody tr:hover { background-color: color-mix(in srgb, var(--bg-primary) 50
     max-width: 480px;
     margin: 40px auto;
 }
+
+.logout-form {
+    margin: 0;
+    padding: 0;
+}
+
+.logout-form button {
+    /* Reseta os estilos de botão padrão */
+    background: none;
+    border: none;
+    padding: 12px 16px; /* Mesmos valores do link <a> */
+    margin: 0;
+    cursor: pointer;
+    width: 100%;
+    
+    /* Aplica os estilos do link do dropdown */
+    font-family: var(--font-family);
+    font-size: 16px; /* Garante o mesmo tamanho de fonte */
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    transition: background-color var(--transition-fast);
+}
+
+.logout-form button:hover {
+    background-color: var(--bg-primary);
+}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify, Response, make_response
 import sqlite3
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -284,12 +284,29 @@ def admin_login():
 
 
 @app.route('/admin/logout')
-@login_required
 def admin_logout():
-    log_action('Saiu')
+    # Primeiro, verificamos se o utilizador estava de facto logado
+    if 'username' in session:
+        # Registamos a ação de logout com o nome de utilizador correto
+        log_action('Saiu')
+    
+    # Limpamos a sessão do lado do servidor
     session.clear()
+    
+    # Exibimos a mensagem de sucesso
     flash('Você foi desconectado com segurança.', 'info')
-    return redirect(url_for('index'))
+    
+    # Criamos uma resposta para redirecionar para a página inicial
+    response = make_response(redirect(url_for('index')))
+    
+    # **A PARTE CRÍTICA:**
+    # Forçamos a expiração do cookie de sessão no navegador,
+    # definindo a sua data de validade para o passado.
+    # O nome do cookie de sessão do Flask é 'session'.
+    response.set_cookie('session', '', expires=0)
+    
+    # Retornamos a resposta modificada
+    return response
 
 
 @app.route('/profile/change_password', methods=['GET', 'POST'])
