@@ -14,11 +14,11 @@ import firebase_admin
 from firebase_admin import credentials, db
 
 try:
-    # Constrói um caminho absoluto para o arquivo de credenciais
+
     base_dir = os.path.dirname(os.path.abspath(__file__))
     credentials_path = os.path.join(base_dir, 'firebase-credentials.json')
 
-    # Verifica se o arquivo realmente existe antes de tentar usá-lo
+    
     if not os.path.exists(credentials_path):
         raise FileNotFoundError(f"O arquivo de credenciais não foi encontrado em: {credentials_path}")
 
@@ -35,35 +35,35 @@ app = Flask(__name__)
 app.config['APPLICATION_ROOT'] = os.environ.get('APP_PREFIX', '')
 
 app.secret_key = '09164Duque!Paprika'
-PER_PAGE = 20  # Itens por página para paginação
+PER_PAGE = 20  
 
 app.jinja_env.add_extension('jinja2.ext.do')
 
 @app.before_request
 def check_for_maintenance():
-    # Ignora a verificação para as rotas estáticas (CSS, JS) e para a própria página de manutenção
-    # Isso previne um loop infinito de redirecionamento.
+    
+    
     if request.endpoint and request.endpoint not in ['static', 'maintenance']:
         try:
-            # Pega a referência do nosso "interruptor" no Firebase
+            
             maintenance_ref = db.reference('config/is_maintenance_mode')
             is_maintenance = maintenance_ref.get()
 
-            # Se o valor for True, exibe a página de manutenção
+            
             if is_maintenance:
-                return render_template('maintenance.html'), 503 # HTTP 503: Serviço Indisponível
+                return render_template('maintenance.html'), 503 
         except Exception as e:
-            # Se der erro ao conectar com o Firebase, o site continua funcionando por segurança.
-            # É bom registrar esse erro para depuração.
+            
+            
             print(f"AVISO: Não foi possível verificar o modo de manutenção no Firebase. O site continuará online. Erro: {e}")
 
-# Rota necessária para que o `render_template` funcione dentro do `check_for_maintenance`
+
 @app.route('/maintenance')
 def maintenance():
     return render_template('maintenance.html'), 503
-# --- FIM DO VERIFICADOR ---
 
-# --- Filtros Personalizados para Templates ---
+
+
 @app.template_filter('datetime')
 def format_datetime(value, fmt='%d/%m/%Y %H:%M:%S'):
     """Formata uma string de data/hora para o formato brasileiro."""
@@ -84,21 +84,21 @@ def pretty_json_filter(value):
         return 'N/A'
     try:
         data = json.loads(value)
-        # Formata como uma lista de chave-valor
+        
         html = "<ul>"
         for key, val in data.items():
-            if key != 'password': # Não exibir senhas
+            if key != 'password': 
                 html += f"<li><strong>{key.replace('_', ' ').title()}:</strong> {val}</li>"
         html += "</ul>"
         return html
     except (json.JSONDecodeError, AttributeError):
         return value
 
-# Inicializa o banco de dados com o app Flask
+
 init_app(app)
 
 
-# --- Funções Auxiliares e de Auditoria ---
+
 def is_ajax_request():
     """Verifica se a requisição é do tipo AJAX."""
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -115,7 +115,7 @@ def log_action(action, target_type=None, target_id=None, target_name=None, dados
     db.commit()
 
 
-# --- Decoradores de Permissão ---
+
 def login_required(f):
     """Garante que o usuário esteja logado para acessar a rota."""
     @wraps(f)
@@ -145,7 +145,7 @@ def role_required(allowed_roles):
     return decorator
 
 
-# --- Rotas de API ---
+
 @app.route('/api/cliente/<codigo_cliente>')
 @login_required
 def get_client_info(codigo_cliente):
@@ -160,7 +160,7 @@ def get_client_info(codigo_cliente):
              return jsonify({'status': 'error', 'message': 'Selecione uma empresa.'}), 400
         params = [codigo_cliente, store_id]
 
-    # ✅ CORREÇÃO: Buscando na tabela correta 'clientes'
+    
     client = db.execute(f"SELECT nome_cliente FROM clientes WHERE codigo_cliente = ? AND {store_id_clause}", params).fetchone()
     
     if client:
@@ -176,7 +176,7 @@ def get_marcas_por_tipo(tipo_id):
     return jsonify([dict(m) for m in marcas])
 
 
-# --- Rotas Principais e de Busca ---
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -212,9 +212,9 @@ def search():
         elif search_by == 'nome_cliente':
             all_results = db.execute("SELECT * FROM clientes WHERE nome_cliente LIKE ?", (query_term,)).fetchall()
         elif search_by == 'patrimonio_especifico':
-            # ✅ CORREÇÃO APLICADA AQUI
-            # A busca agora é feita na coluna correta: 'codigo_patrimonio'
-            # E utiliza LEFT JOIN para garantir que itens sem tipo ou marca apareçam.
+            
+            
+            
             items = db.execute("""
                 SELECT c.*, t.nome as tipo, m.nome as marca, pi.tamanho, pi.codigo_patrimonio
                 FROM clientes c
@@ -257,7 +257,7 @@ def search():
                            total_pages=total_pages)
 
 
-# --- Rotas de Autenticação e Perfil ---
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -285,27 +285,27 @@ def admin_login():
 
 @app.route('/admin/logout')
 def admin_logout():
-    # Primeiro, verificamos se o utilizador estava de facto logado
+    
     if 'username' in session:
-        # Registamos a ação de logout com o nome de utilizador correto
+        
         log_action('Saiu')
     
-    # Limpamos a sessão do lado do servidor
+    
     session.clear()
     
-    # Exibimos a mensagem de sucesso
+    
     flash('Você foi desconectado com segurança.', 'info')
     
-    # Criamos uma resposta para redirecionar para a página inicial
+    
     response = make_response(redirect(url_for('index')))
     
-    # **A PARTE CRÍTICA:**
-    # Forçamos a expiração do cookie de sessão no navegador,
-    # definindo a sua data de validade para o passado.
-    # O nome do cookie de sessão do Flask é 'session'.
+    
+    
+    
+    
     response.set_cookie('session', '', expires=0)
     
-    # Retornamos a resposta modificada
+    
     return response
 
 
@@ -337,26 +337,26 @@ def change_password():
     return render_template('profile/change_password.html')
 
 
-# --- Rotas de Super Admin ---
+
 @app.route('/super_admin/dashboard')
 @login_required
 @role_required(['super_admin'])
 def super_admin_dashboard():
     db = get_db()
     
-    # --- Métricas Principais (KPIs) ---
+    
     total_users = db.execute("SELECT COUNT(id) FROM users").fetchone()[0]
     total_stores = db.execute("SELECT COUNT(id) FROM stores").fetchone()[0]
     total_patrimonio = db.execute("SELECT COUNT(id) FROM patrimonio_items").fetchone()[0]
     total_cobrancas = db.execute("SELECT COUNT(id) FROM cobranca_fichas_acerto").fetchone()[0]
     total_pagamentos = db.execute("SELECT COUNT(id) FROM contas_a_pagar_pagamentos").fetchone()[0]
 
-    # --- Análise de Utilizadores ---
-    # Contagem de utilizadores por função para o gráfico
+    
+    
     users_by_role_raw = db.execute("SELECT role, COUNT(id) as count FROM users GROUP BY role").fetchall()
     users_by_role = {row['role'].replace('_', ' ').title(): row['count'] for row in users_by_role_raw}
 
-    # Top 5 utilizadores mais ativos (com base no número de logs)
+    
     most_active_users = db.execute("""
         SELECT username, COUNT(id) as action_count 
         FROM audit_log 
@@ -366,7 +366,7 @@ def super_admin_dashboard():
         LIMIT 5
     """).fetchall()
 
-    # --- Atividade Recente ---
+    
     recent_logs = db.execute("SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 5").fetchall()
 
     return render_template(
@@ -495,7 +495,7 @@ def user_management():
     where_clauses = []
     if search_query:
         search_term = f"%{search_query}%"
-        # CORREÇÃO: Simplifica a lógica da cláusula WHERE
+        
         where_clauses.append("(u.username LIKE ? OR u.role LIKE ? OR s.name LIKE ?)")
         params.extend([search_term, search_term, search_term])
     
@@ -675,7 +675,7 @@ def manage_attributes():
     
     return render_template('super_admin/manage_attributes.html', tipos=tipos, marcas=marcas, tamanhos=tamanhos)
 
-# NOVAS ROTAS PARA ADICIONAR E EXCLUIR
+
 @app.route('/super_admin/tipos/add', methods=['POST'])
 @login_required
 @role_required(['super_admin'])
@@ -731,7 +731,7 @@ def add_tamanho():
 @role_required(['super_admin'])
 def delete_tipo(tipo_id):
     db = get_db()
-    # A exclusão em cascata (ON DELETE CASCADE) no DB irá remover as marcas associadas.
+    
     db.execute("DELETE FROM tipos_equipamento WHERE id = ?", (tipo_id,))
     db.commit()
     flash('Tipo removido com sucesso.', 'success')
@@ -757,7 +757,7 @@ def delete_tamanho(tamanho_id):
     flash('Tamanho removido com sucesso!', 'success')
     return redirect(url_for('manage_attributes'))
 
-# --- Rotas de Patrimônio ---
+
 @app.route('/patrimonio/dashboard', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_patrimonio'])
@@ -841,7 +841,7 @@ def patrimonio_dashboard():
 def patrimonio_export_excel():
     db = get_db()
     
-    # A consulta ao banco de dados permanece a mesma
+    
     query = """
         SELECT 
             s.name as nome_empresa, c.codigo_cliente, c.nome_cliente, c.numero_caixa,
@@ -862,17 +862,17 @@ def patrimonio_export_excel():
     
     items = db.execute(query, params).fetchall()
     
-    # --- Início da Criação da Planilha com Tabela Estilizada ---
+    
     output = io.BytesIO()
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = 'Relatório de Patrimônios'
 
-    # Adiciona o cabeçalho
+    
     cabecalho = ['Empresa', 'Código Cliente', 'Nome Cliente', 'Nº Caixa', 'Código Patrimônio', 'Tipo', 'Marca', 'Tamanho']
     sheet.append(cabecalho)
     
-    # Adiciona os dados
+    
     for item in items:
         sheet.append([
             item['nome_empresa'] or 'N/A',
@@ -885,28 +885,28 @@ def patrimonio_export_excel():
             item['tamanho'] or 'N/A'
         ])
         
-    # --- Criação e Formatação da Tabela ---
     
-    # Define o intervalo da tabela (da célula A1 até à última célula com dados)
+    
+    
     full_range = f"A1:{openpyxl.utils.get_column_letter(sheet.max_column)}{sheet.max_row}"
     
-    # Cria o objeto Tabela
+    
     tab = Table(displayName="TabelaPatrimonios", ref=full_range)
 
-    # Define um estilo visual para a tabela
-    # 'TableStyleMedium9' é um estilo azul com linhas alternadas
+    
+    
     style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
                            showLastColumn=False, showRowStripes=True, showColumnStripes=False)
     
     tab.tableStyleInfo = style
     
-    # Adiciona a tabela à planilha
+    
     sheet.add_table(tab)
 
-    # Congela o painel do cabeçalho
+    
     sheet.freeze_panes = 'A2'
 
-    # Autoajusta a largura das colunas para uma visualização perfeita
+    
     for col in sheet.columns:
         max_length = 0
         column_letter = openpyxl.utils.get_column_letter(col[0].column)
@@ -919,7 +919,7 @@ def patrimonio_export_excel():
         adjusted_width = (max_length + 2)
         sheet.column_dimensions[column_letter].width = adjusted_width
 
-    # Salva o workbook e prepara a resposta
+    
     workbook.save(output)
     output.seek(0)
     
@@ -958,7 +958,7 @@ def patrimonio_edit(cliente_id):
                    (request.form['codigo_cliente'], request.form['nome_cliente'], request.form['numero_caixa'], cliente_id))
         db.commit()
         flash('Dados do cliente atualizados com sucesso!', 'success')
-        # ✅ CORREÇÃO: Usando 'cliente_id' em vez de 'item_id' no redirect.
+        
         return redirect(url_for('patrimonio_edit', cliente_id=cliente_id))
 
     patrimonios = db.execute("""
@@ -1042,7 +1042,7 @@ def patrimonio_relatorios():
                            stores=stores,
                            current_filters={'tipo_id': tipo_id, 'marca_id': marca_id, 'tamanho': tamanho, 'store_id': store_id})
 
-# --- Rotas RH ---
+
 @app.route('/rh/dashboard')
 @login_required
 @role_required(['super_admin', 'admin_rh'])
@@ -1050,7 +1050,7 @@ def rh_dashboard():
     return render_template('rh/rh_dashboard.html')
 
 
-# --- Rotas Contas a Pagar (Pagamentos) ---
+
 @app.route('/contas_a_pagar/dashboard', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_contas_a_pagar'])
@@ -1169,7 +1169,7 @@ def contas_a_pagar_pagamentos_edit(item_id):
     return render_template('contas_a_pagar/contas_a_pagar_pagamentos_edit.html', item=item)
 
 
-# --- Rotas de Cobrança ---
+
 @app.route('/cobranca/dashboard', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_cobranca'])
@@ -1261,7 +1261,7 @@ def cobranca_export_excel():
     cabecalho = ['Empresa', 'Ficha de Acerto', 'Caixa', 'Range Cliente Início', 'Range Cliente Fim']
     sheet.append(cabecalho)
     
-    # Estilos do cabeçalho
+    
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
     for cell in sheet[1]:
@@ -1277,7 +1277,7 @@ def cobranca_export_excel():
             item['range_cliente_fim']
         ])
     
-    # Adicionar Tabela Estilizada
+    
     tabela = Table(displayName="TabelaCobranca", ref=f"A1:{openpyxl.utils.get_column_letter(sheet.max_column)}{sheet.max_row}")
     estilo = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False, showLastColumn=False, showRowStripes=True, showColumnStripes=False)
     tabela.tableStyleInfo = estilo
@@ -1342,7 +1342,7 @@ def cobranca_fichas_acerto_edit(item_id):
         return redirect(url_for('cobranca_dashboard'))
     return render_template('cobranca/cobranca_fichas_acerto_edit.html', item=item)
 
-# --- Rotas Contas a Pagar (Documentos Diversos) ---
+
 @app.route('/contas_a_pagar/documentos_diversos', methods=['GET', 'POST'])
 @login_required
 @role_required(['super_admin', 'admin_contas_a_pagar'])

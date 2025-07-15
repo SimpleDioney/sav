@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Lógica para autocompletar nome do cliente no formulário de patrimônio
+    
     const patrimonioForm = document.getElementById('patrimonio-form');
     if (patrimonioForm) {
         const codigoClienteInput = document.getElementById('codigo_cliente');
         const nomeClienteInput = document.getElementById('nome_cliente');
         const clienteInfoSpan = document.getElementById('cliente-info');
-        // Lê a BASE do URL da API de clientes
+        
         const clienteApiUrlBase = patrimonioForm.dataset.clienteApiBaseUrl;
 
         codigoClienteInput.addEventListener('blur', async function() {
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (codigo && clienteApiUrlBase) {
                 try {
-                    // CONSTRÓI o URL final juntando a base + o código
+                    
                     let url = clienteApiUrlBase + `/${codigo}`;
                     
                     if (storeId) {
@@ -47,11 +47,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Lógica para formulário dinâmico de marcas e tamanho
+        
         const tipoSelect = document.getElementById('tipo_id');
         const marcaSelect = document.getElementById('marca_id');
         const tamanhoDiv = document.getElementById('tamanho-div');
-        // Lê a BASE do URL da API de marcas
+        
         const marcasApiUrlBase = patrimonioForm.dataset.marcasApiBaseUrl;
 
         if (tipoSelect && marcaSelect && marcasApiUrlBase) {
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (tipoId) {
                     try {
-                        // CONSTRÓI o URL final juntando a base + o ID do tipo
+                        
                         const url = marcasApiUrlBase + `/${tipoId}`;
                         const response = await fetch(url);
                         if (!response.ok) throw new Error('Falha na resposta da rede');
@@ -123,7 +123,7 @@ async function handleFormSubmit(form) {
             if (isDeleteForm) {
                 document.querySelector(`tr[data-id='${result.itemId}']`).remove();
             } else {
-                // Adiciona a nova linha e reseta o formulário
+                
                 const tableBody = document.querySelector('.table-wrapper tbody');
                 if (tableBody && result.item) {
                     const newRow = createTableRow(result.item, result.page_type);
@@ -158,22 +158,22 @@ async function handlePaginationClick(link) {
 
         const result = await response.json();
 
-        // Atualiza o conteúdo da tabela
+        
         const tableBody = document.querySelector('.table-wrapper tbody');
         if (tableBody) {
-            tableBody.innerHTML = ''; // Limpa a tabela
+            tableBody.innerHTML = ''; 
             result.items.forEach(item => {
                 const newRow = createTableRow(item, result.page_type, result.script_root);
                 tableBody.insertAdjacentHTML('beforeend', newRow);
             });
         }
 
-        // Atualiza os links de paginação
+        
         const paginationContainer = document.querySelector('.pagination');
         if (paginationContainer) {
             paginationContainer.innerHTML = result.pagination_html;
         }
-         // Atualiza a URL da página sem recarregar
+         
         window.history.pushState({path: url}, '', url);
 
     } catch (error) {
@@ -195,7 +195,7 @@ function createTableRow(item, pageType, scriptRoot = '') {
     let editUrl, deleteUrl;
 
     switch (pageType) {
-        // ... (as implementações de 'case' para cada tipo de página podem ser adicionadas aqui se necessário) ...
+        
         default:
             cells = `<td>${item.id || ''}</td><td>${item.name || 'Novo Item'}</td>`;
             break;
@@ -231,7 +231,7 @@ function displayFlashMessage(message, category) {
     messageDiv.className = `message ${category}`;
     messageDiv.innerHTML = `<p>${message}</p><button class="close-message">&times;</button>`;
     
-    wrapper.innerHTML = ''; // Limpa mensagens antigas
+    wrapper.innerHTML = ''; 
     wrapper.appendChild(messageDiv);
 
     messageDiv.querySelector('.close-message').addEventListener('click', () => {

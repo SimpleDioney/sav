@@ -118,7 +118,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('usersByRoleChart');
     if (ctx) {
-        // Dados do gráfico passados pelo Flask
         const usersByRoleData = {{ users_by_role | tojson }};
         const labels = Object.keys(usersByRoleData);
         const data = Object.values(usersByRoleData);
