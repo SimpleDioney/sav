@@ -134,7 +134,7 @@ def role_required(allowed_roles):
             if not session.get('logged_in') or session.get('role') not in allowed_roles:
                 if is_ajax_request():
                     return jsonify({'status': 'error', 'message': 'Você não tem permissão para esta ação.'}), 403
-                log_action('access_denied', target_name=request.path)
+                log_action('acesso_negado', target_name=request.path)
                 flash('Você não tem permissão para acessar esta página.', 'danger')
                 return redirect(url_for('admin_dashboard'))
             return f(*args, **kwargs)
@@ -271,11 +271,11 @@ def admin_login():
             session['role'] = user['role']
             session['store_id'] = user['store_id']
             session['store_name'] = user['store_name']
-            log_action('login_success')
+            log_action('fez_login')
             flash(f'Login bem-sucedido! Bem-vindo, {user["username"]}.', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
-            log_action('login_failed', target_name=username)
+            log_action('erro_no_login', target_name=username)
             flash('Usuário ou senha inválidos.', 'danger')
     return render_template('admin_login.html')
 
@@ -283,7 +283,7 @@ def admin_login():
 @app.route('/admin/logout')
 @login_required
 def admin_logout():
-    log_action('logout')
+    log_action('Saiu')
     session.clear()
     flash('Você foi desconectado com segurança.', 'info')
     return redirect(url_for('index'))
@@ -310,7 +310,7 @@ def change_password():
             hashed_password = generate_password_hash(new_password)
             db.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_password, session['user_id']))
             db.commit()
-            log_action('change_password_self')
+            log_action('trocou_sua_senha')
             flash('Sua senha foi alterada com sucesso!', 'success')
             return redirect(url_for('admin_dashboard'))
 
@@ -427,7 +427,7 @@ def user_edit(user_id):
             dados_novos['password'] = '******'
         
         db.commit()
-        log_action('edit_user', target_id=user_id, target_name=user['username'], dados_antigos=dados_antigos, dados_novos=dados_novos)
+        log_action('editou_usuario', target_id=user_id, target_name=user['username'], dados_antigos=dados_antigos, dados_novos=dados_novos)
         flash(f'Usuário {user["username"]} atualizado com sucesso!', 'success')
         return redirect(url_for('user_management'))
 
@@ -460,7 +460,7 @@ def user_management():
                                (username, hashed_password, role, can_add_users, store_id))
                 new_user_id = cursor.lastrowid
                 db.commit()
-                log_action('create_user', target_id=new_user_id, target_name=username)
+                log_action('criou_usuario', target_id=new_user_id, target_name=username)
 
                 if is_ajax_request():
                     new_user = db.execute("SELECT u.*, s.name as store_name FROM users u LEFT JOIN stores s ON u.store_id = s.id WHERE u.id = ?", (new_user_id,)).fetchone()
@@ -511,7 +511,7 @@ def delete_user(user_id):
         if is_ajax_request(): return jsonify({'status': 'error', 'message': 'Não é possível excluir um Super Admin.'}), 403
         flash('Não é possível excluir um Super Admin.', 'danger')
     elif user:
-        log_action('delete_user', target_id=user_id, target_name=user['username'], dados_antigos=dict(user))
+        log_action('deletou_usuario', target_id=user_id, target_name=user['username'], dados_antigos=dict(user))
         db.execute("DELETE FROM users WHERE id = ?", (user_id,))
         db.commit()
         if is_ajax_request(): return jsonify({'status': 'success', 'message': 'Usuário excluído!', 'itemId': user_id})
@@ -544,7 +544,7 @@ def manage_stores():
                 for dept_role in selected_departments:
                     cursor.execute("INSERT INTO store_departments (store_id, department_role) VALUES (?, ?)", (store_id, dept_role))
                 db.commit()
-                log_action('create_store', target_id=store_id, target_name=store_name, dados_novos={'name': store_name, 'departments': selected_departments})
+                log_action('criou_empresa', target_id=store_id, target_name=store_name, dados_novos={'name': store_name, 'departments': selected_departments})
                 
                 if is_ajax_request():
                     new_store_q = "SELECT s.id, s.name, GROUP_CONCAT(sd.department_role, ', ') as departments FROM stores s LEFT JOIN store_departments sd ON s.id = sd.store_id WHERE s.id = ? GROUP BY s.id"
@@ -602,7 +602,7 @@ def delete_store(store_id):
         db.execute("UPDATE users SET store_id = NULL WHERE store_id = ?", (store_id,))
         db.execute("DELETE FROM stores WHERE id = ?", (store_id,))
         db.commit()
-        log_action('delete_store', target_id=store_id, target_name=store['name'], dados_antigos=dict(store))
+        log_action('deletou_empresa', target_id=store_id, target_name=store['name'], dados_antigos=dict(store))
         if is_ajax_request():
             return jsonify({'status': 'success', 'message': 'Empresa excluída!', 'itemId': store_id})
         flash('EMPRESA excluída com sucesso!', 'success')
@@ -917,7 +917,7 @@ def patrimonio_delete(cliente_id):
         flash('Cliente não encontrado ou sem permissão para excluir.', 'danger')
     else:
         with db:
-            log_action('delete_cliente', target_id=cliente_id, target_name=cliente['codigo_cliente'], dados_antigos=dict(cliente))
+            log_action('deletou_cliente', target_id=cliente_id, target_name=cliente['codigo_cliente'], dados_antigos=dict(cliente))
             db.execute("DELETE FROM patrimonio_items WHERE cliente_id = ?", (cliente_id,))
             db.execute("DELETE FROM clientes WHERE id = ?", (cliente_id,))
         flash('Cliente e todos os seus patrimônios foram excluídos com sucesso!', 'success')
@@ -1051,7 +1051,7 @@ def contas_a_pagar_dashboard():
         cursor.execute("INSERT INTO contas_a_pagar_pagamentos (pagamento_data_inicio, pagamento_data_fim, caixa, store_id) VALUES (?, ?, ?, ?)", list(dados_novos.values()))
         new_id = cursor.lastrowid
         db.commit()
-        log_action('add_pagamento', target_id=new_id, target_name=f"Caixa {dados_novos['caixa']}", dados_novos=dados_novos)
+        log_action('adicionou_pagamento', target_id=new_id, target_name=f"Caixa {dados_novos['caixa']}", dados_novos=dados_novos)
 
         if is_ajax_request():
             new_item = db.execute("SELECT p.*, s.name as store_name FROM contas_a_pagar_pagamentos p LEFT JOIN stores s ON p.store_id = s.id WHERE p.id = ?", (new_id,)).fetchone()
@@ -1119,7 +1119,7 @@ def contas_a_pagar_pagamentos_delete(item_id):
         if is_ajax_request(): return jsonify({'status': 'error', 'message': 'Registro não encontrado ou sem permissão.'}), 403
         flash('Registro não encontrado ou sem permissão.', 'danger')
     else:
-        log_action('delete_pagamento', target_id=item_id, target_name=f"Caixa {item['caixa']}", dados_antigos=dict(item))
+        log_action('deletou_pagamento', target_id=item_id, target_name=f"Caixa {item['caixa']}", dados_antigos=dict(item))
         db.execute("DELETE FROM contas_a_pagar_pagamentos WHERE id = ?", (item_id,))
         db.commit()
         if is_ajax_request(): return jsonify({'status': 'success', 'message': 'Registro excluído!', 'itemId': item_id})
@@ -1143,7 +1143,7 @@ def contas_a_pagar_pagamentos_edit(item_id):
         db.execute("UPDATE contas_a_pagar_pagamentos SET pagamento_data_inicio = ?, pagamento_data_fim = ?, caixa = ? WHERE id = ?", 
                    (dados_novos['pagamento_data_inicio'], dados_novos['pagamento_data_fim'], dados_novos['caixa'], item_id))
         db.commit()
-        log_action('edit_pagamento', target_id=item_id, target_name=f"Caixa {dados_novos['caixa']}", dados_antigos=dados_antigos, dados_novos=dados_novos)
+        log_action('editou_pagamento', target_id=item_id, target_name=f"Caixa {dados_novos['caixa']}", dados_antigos=dados_antigos, dados_novos=dados_novos)
         flash('Registro atualizado com sucesso!', 'success')
         return redirect(url_for('contas_a_pagar_dashboard'))
     return render_template('contas_a_pagar/contas_a_pagar_pagamentos_edit.html', item=item)
@@ -1171,7 +1171,7 @@ def cobranca_dashboard():
             cursor.execute("INSERT INTO cobranca_fichas_acerto (ficha_acerto, caixa, range_cliente_inicio, range_cliente_fim, store_id, order_position) VALUES (?, ?, ?, ?, ?, ?)", list(dados_novos.values()))
             new_id = cursor.lastrowid
             db.commit()
-            log_action('add_ficha_acerto', target_id=new_id, target_name=f"Ficha {dados_novos['ficha_acerto']}", dados_novos=dados_novos)
+            log_action('adicionou_ficha_acerto', target_id=new_id, target_name=f"Ficha {dados_novos['ficha_acerto']}", dados_novos=dados_novos)
 
             if is_ajax_request():
                 new_item = db.execute("SELECT f.*, s.name as store_name FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id WHERE f.id = ?", (new_id,)).fetchone()
@@ -1290,7 +1290,7 @@ def cobranca_fichas_acerto_delete(item_id):
         if is_ajax_request(): return jsonify({'status': 'error', 'message': 'Ficha de Acerto não encontrada ou sem permissão.'}), 403
         flash('Ficha de Acerto não encontrada ou sem permissão.', 'danger')
     else:
-        log_action('delete_ficha_acerto', target_id=item_id, target_name=f"Ficha {item['ficha_acerto']}", dados_antigos=dict(item))
+        log_action('deletou_ficha_acerto', target_id=item_id, target_name=f"Ficha {item['ficha_acerto']}", dados_antigos=dict(item))
         db.execute("DELETE FROM cobranca_fichas_acerto WHERE id = ?", (item_id,))
         db.commit()
         if is_ajax_request(): return jsonify({'status': 'success', 'message': 'Ficha de Acerto excluída!', 'itemId': item_id})
@@ -1315,7 +1315,7 @@ def cobranca_fichas_acerto_edit(item_id):
             db.execute("UPDATE cobranca_fichas_acerto SET ficha_acerto = ?, caixa = ?, range_cliente_inicio = ?, range_cliente_fim = ? WHERE id = ?", 
                        (dados_novos['ficha_acerto'], dados_novos['caixa'], dados_novos['range_cliente_inicio'], dados_novos['range_cliente_fim'], item_id))
             db.commit()
-            log_action('edit_ficha_acerto', target_id=item_id, target_name=f"Ficha {dados_novos['ficha_acerto']}", dados_antigos=dados_antigos, dados_novos=dados_novos)
+            log_action('editou_ficha_acerto', target_id=item_id, target_name=f"Ficha {dados_novos['ficha_acerto']}", dados_antigos=dados_antigos, dados_novos=dados_novos)
             flash('Ficha de Acerto atualizada com sucesso!', 'success')
         except ValueError:
             flash('Os campos de range de cliente devem ser números.', 'danger')
@@ -1343,7 +1343,7 @@ def documentos_diversos_dashboard():
         cursor.execute("INSERT INTO contas_a_pagar_diversos (numero_caixa, store_id) VALUES (?, ?)", list(dados_novos.values()))
         new_id = cursor.lastrowid
         db.commit()
-        log_action('add_documento_diverso', target_id=new_id, target_name=f"Caixa {dados_novos['numero_caixa']}", dados_novos=dados_novos)
+        log_action('adicionou_documento_diverso', target_id=new_id, target_name=f"Caixa {dados_novos['numero_caixa']}", dados_novos=dados_novos)
 
         if is_ajax_request():
             new_item = db.execute("SELECT d.*, s.name as store_name FROM contas_a_pagar_diversos d LEFT JOIN stores s ON d.store_id = s.id WHERE d.id = ?", (new_id,)).fetchone()
@@ -1479,7 +1479,7 @@ def contas_a_pagar_diversos_delete(item_id):
         if is_ajax_request(): return jsonify({'status': 'error', 'message': 'Documento não encontrado ou sem permissão.'}), 403
         flash('Documento não encontrado ou sem permissão.', 'danger')
     else:
-        log_action('delete_documento_diverso', target_id=item_id, target_name=f"Caixa {item['numero_caixa']}", dados_antigos=dict(item))
+        log_action('deletou_documento_diverso', target_id=item_id, target_name=f"Caixa {item['numero_caixa']}", dados_antigos=dict(item))
         db.execute("DELETE FROM contas_a_pagar_diversos WHERE id = ?", (item_id,))
         db.commit()
         if is_ajax_request(): return jsonify({'status': 'success', 'message': 'Documento excluído!', 'itemId': item_id})
@@ -1502,7 +1502,7 @@ def contas_a_pagar_diversos_edit(item_id):
         dados_novos = {'numero_caixa': request.form['numero_caixa']}
         db.execute("UPDATE contas_a_pagar_diversos SET numero_caixa = ? WHERE id = ?", (dados_novos['numero_caixa'], item_id))
         db.commit()
-        log_action('edit_documento_diverso', target_id=item_id, target_name=f"Caixa {dados_novos['numero_caixa']}", dados_antigos=dados_antigos, dados_novos=dados_novos)
+        log_action('editou_documento_diverso', target_id=item_id, target_name=f"Caixa {dados_novos['numero_caixa']}", dados_antigos=dados_antigos, dados_novos=dados_novos)
         flash('Documento atualizado com sucesso!', 'success')
         return redirect(url_for('documentos_diversos_dashboard'))
     return render_template('contas_a_pagar/documentos_diversos_edit.html', item=item)
