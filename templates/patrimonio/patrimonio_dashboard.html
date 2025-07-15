@@ -2,11 +2,16 @@
 
 {% block title %}Painel Patrimônio{% endblock %}
 
-{% block content %}
+{% block page_title %}Gestão de Patrimônio{% endblock %}
 
-    <h2><i class="fas fa-box"></i> Adicionar Novo Patrimônio</h2>
+{% block content %}
+<div class="card">
+    <h2><i class="fas fa-plus"></i> Adicionar Novo Patrimônio</h2>
     
-    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST" class="form-section" id="patrimonio-form">
+    <form action="{{ url_for('patrimonio_dashboard') }}" method="POST" id="patrimonio-form"
+          data-cliente-api-base-url="{{ url_for('get_client_info', codigo_cliente=0)[:-2] }}"
+          data-marcas-api-base-url="{{ url_for('get_marcas_por_tipo', tipo_id=0)[:-2] }}">
+        
         {% if session.role == 'super_admin' %}
         <label for="store_id">Empresa:</label>
         <select id="store_id" name="store_id" required>
@@ -19,7 +24,7 @@
         
         <label for="codigo_cliente">Código do Cliente:</label>
         <input type="text" id="codigo_cliente" name="codigo_cliente" required>
-        <span id="cliente-info" class="form-help-text"></span>
+        <span id="cliente-info" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -10px; margin-bottom: 10px; display: block;"></span>
 
         <label for="nome_cliente">Nome do Cliente:</label>
         <input type="text" id="nome_cliente" name="nome_cliente" required>
@@ -27,7 +32,8 @@
         <label for="numero_caixa">Número da Caixa:</label>
         <input type="text" id="numero_caixa" name="numero_caixa" required>
 
-        <hr>
+        <hr style="border-top: 1px solid var(--border-color); margin: 20px 0;">
+
         <h4>Detalhes do Equipamento</h4>
 
         <label for="codigo_patrimonio">Código do Patrimônio (Ex: 0443):</label>
@@ -36,9 +42,7 @@
         <label for="tipo_id">Tipo de Equipamento:</label>
         <select id="tipo_id" name="tipo_id" required>
             <option value="">Selecione um tipo</option>
-            {% for tipo in tipos %}
-                <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
-            {% endfor %}
+            {% for tipo in tipos %}<option value="{{ tipo.id }}">{{ tipo.nome }}</option>{% endfor %}
         </select>
 
         <label for="marca_id">Marca:</label>
@@ -50,26 +54,25 @@
             <label for="tamanho">Tamanho (para Freezers):</label>
             <select id="tamanho" name="tamanho">
                 <option value="">Selecione um tamanho</option>
-                {% for tamanho in tamanhos %}
-                    <option value="{{ tamanho.nome }}">{{ tamanho.nome }}</option>
-                {% endfor %}
+                {% for tamanho in tamanhos %}<option value="{{ tamanho.nome }}">{{ tamanho.nome }}</option>{% endfor %}
             </select>
         </div>
         
         <button type="submit"><i class="fas fa-plus"></i> Adicionar Patrimônio</button>
     </form>
+</div>
 
+<div class="card">
     <h2><i class="fas fa-users"></i> Clientes com Patrimônios</h2>
-
-    <a href="{{ url_for('patrimonio_export_excel') }}" class="export-button">
-        <i class="fas fa-file-excel"></i> Exportar para Excel
-    </a>
     
-    <div class="in-page-search">
-        <form method="GET" action="{{ url_for('patrimonio_dashboard') }}">
+    <div class="dashboard-actions">
+        <form method="GET" action="{{ url_for('patrimonio_dashboard') }}" class="filter-form">
             <input type="text" name="search" placeholder="Buscar por código, nome ou caixa..." value="{{ search or '' }}">
-            <button type="submit" class="filter-btn"><i class="fas fa-search"></i></button>
+            <button type="submit" class="button-primary"><i class="fas fa-search"></i></button>
         </form>
+        <a href="{{ url_for('patrimonio_export_excel') }}" class="export-button">
+            <i class="fas fa-file-excel"></i> Exportar
+        </a>
     </div>
 
     <div class="table-wrapper">
@@ -107,9 +110,10 @@
             <p style="text-align:center; padding: 20px;">Nenhum cliente com patrimônio encontrado.</p>
         {% endif %}
     </div>
+    {% include '_pagination.html' %}
+</div>
+{% endblock %}
+
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-{% endblock %}
-    {% include '_pagination.html' %}
-    
 {% endblock %}

@@ -13,7 +13,7 @@
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body data-is-super-admin="{{ 'true' if session.role == 'super_admin' else 'false' }}">
     {% block layout_wrapper %}
     <div class="page-wrapper">
         {% if session.logged_in %}

@@ -32,9 +32,7 @@ except Exception as e:
 
 app = Flask(__name__)
 
-@app.context_processor
-def inject_script_root():
-    return dict(SCRIPT_ROOT=os.environ.get('APP_PREFIX', ''))
+app.config['APPLICATION_ROOT'] = os.environ.get('APP_PREFIX', '')
 
 app.secret_key = '09164Duque!Paprika'
 PER_PAGE = 20  # Itens por página para paginação
