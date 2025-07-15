@@ -341,3 +341,9 @@ table tbody tr:hover { background-color: color-mix(in srgb, var(--bg-primary) 50
     color: var(--color-primary);
     text-decoration: underline;
 }
+
+.standalone-card-content {
+    width: 100%;
+    max-width: 480px;
+    margin: 40px auto;
+}
