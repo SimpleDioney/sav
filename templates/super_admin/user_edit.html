@@ -2,16 +2,16 @@
 
 {% block title %}Editar Usuário{% endblock %}
 
+{% block page_title %}Editar Usuário: {{ user.username }}{% endblock %}
+
 {% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('user_management') }}"><i class="fas fa-arrow-left"></i> Voltar para Gerenciamento de Usuários</a>
-</div>
-
-<h2><i class="fas fa-user-edit"></i> Editar Usuário: {{ user.username }}</h2>
-
-<div class="form-section">
+<div class="card">
+    <div class="dashboard-actions" style="margin-bottom: 20px;">
+        <a href="{{ url_for('user_management') }}" class="button-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar ao Painel
+        </a>
+    </div>
     <form action="{{ url_for('user_edit', user_id=user.id) }}" method="POST">
-        
         <label for="role">Departamento/Função:</label>
         <select id="role" name="role" required>
             <option value="admin_patrimonio" {% if user.role == 'admin_patrimonio' %}selected{% endif %}>Admin Patrimônio</option>
@@ -35,12 +35,12 @@
             <span>Permitir que este usuário crie outros usuários</span>
         </label>
         
-        <hr>
+        <hr style="border-top: 1px solid var(--border-color); margin: 20px 0;">
 
         <label for="new_password">Nova Senha (deixe em branco para não alterar):</label>
         <input type="password" id="new_password" name="new_password" placeholder="Mínimo 6 caracteres">
 
-        <button type="submit" class="button-save"><i class="fas fa-save"></i> Salvar Alterações</button>
+        <button type="submit" class="button-primary"><i class="fas fa-save"></i> Salvar Alterações</button>
     </form>
 </div>
 {% endblock %}

@@ -2,36 +2,28 @@
 
 {% block title %}Relatórios de Patrimônio{% endblock %}
 
-{% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
-</div>
+{% block page_title %}Relatórios de Patrimônio{% endblock %}
 
+{% block content %}
 <div class="card">
     <h2><i class="fas fa-chart-bar"></i> Filtros de Relatório</h2>
-    <form method="GET" action="{{ url_for('patrimonio_relatorios') }}" class="form-section filter-form">
-        <div class="filter-controls">
+    <form method="GET" action="{{ url_for('patrimonio_relatorios') }}" class="filter-form">
+        <div class="filter-controls" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
             {% if session.role == 'super_admin' %}
             <select name="store_id">
                 <option value="">Todas as Empresas</option>
-                {% for store in stores %}
-                    <option value="{{ store.id }}" {% if current_filters.store_id == store.id %}selected{% endif %}>{{ store.name }}</option>
-                {% endfor %}
+                {% for store in stores %}<option value="{{ store.id }}" {% if current_filters.store_id == store.id %}selected{% endif %}>{{ store.name }}</option>{% endfor %}
             </select>
             {% endif %}
             
             <select name="tipo_id">
                 <option value="">Todos os Tipos</option>
-                {% for tipo in tipos %}
-                    <option value="{{ tipo.id }}" {% if current_filters.tipo_id == tipo.id %}selected{% endif %}>{{ tipo.nome }}</option>
-                {% endfor %}
+                {% for tipo in tipos %}<option value="{{ tipo.id }}" {% if current_filters.tipo_id == tipo.id %}selected{% endif %}>{{ tipo.nome }}</option>{% endfor %}
             </select>
 
             <select name="marca_id">
                 <option value="">Todas as Marcas</option>
-                {% for marca in marcas %}
-                    <option value="{{ marca.id }}" {% if current_filters.marca_id == marca.id %}selected{% endif %}>{{ marca.nome }}</option>
-                {% endfor %}
+                {% for marca in marcas %}<option value="{{ marca.id }}" {% if current_filters.marca_id == marca.id %}selected{% endif %}>{{ marca.nome }}</option>{% endfor %}
             </select>
 
             <select name="tamanho">
@@ -41,8 +33,8 @@
                 <option value="Grande" {% if current_filters.tamanho == 'Grande' %}selected{% endif %}>Grande</option>
             </select>
 
-            <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Filtrar</button>
-            <a href="{{ url_for('patrimonio_relatorios') }}" class="clear-btn">Limpar Filtros</a>
+            <button type="submit" class="button-primary"><i class="fas fa-filter"></i> Filtrar</button>
+            <a href="{{ url_for('patrimonio_relatorios') }}" class="button-secondary">Limpar</a>
         </div>
     </form>
 </div>

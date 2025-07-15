@@ -1,45 +1,203 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ARQUIVOS{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-</head>
-<body data-is-super-admin="{{ 'true' if session.role == 'super_admin' else 'false' }}" data-script-name="{{ request.script_root or '' }}" {% block body_attributes %}{% endblock %}>
-    <div class="container">
-        <header class="main-header">
-            <h1><i class="fas fa-archive"></i> ARQUIVOS</h1>
-            {% if session.logged_in %}
-            <div class="user-menu">
-                <span class="user-greeting"><i class="fas fa-user"></i> Olá, {{ session.username }}!</span>
-                <a href="{{ url_for('change_password') }}" title="Alterar Senha"><i class="fas fa-key"></i> Alterar Senha</a>
-                <a href="{{ url_for('admin_logout') }}" title="Sair"><i class="fas fa-sign-out-alt"></i> Sair</a>
-            </div>
-            {% endif %}
-        </header>
-        
-        <div class="messages-wrapper">
-            {# As mensagens flash serão inseridas aqui pelo JavaScript #}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="messages">
-                        {% for category, message in messages %}
-                            <li class="{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
-        </div>
-
-        <main class="card">
-            {% block content %}{% endblock %}
-        </main>
-    </div>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <title>{% block title %}ARQUIVOS{% endblock %} - Gestor de Arquivos</title>
     
-    {% block scripts %}{% endblock %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-archive logo-icon"></i>
+                <h1 class="logo-text">ARQUIVOS</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-menu">
+                    {% if session.logged_in %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' or request.endpoint == 'super_admin_dashboard' %}active{% endif %}">
+                                <i class="fas fa-tachometer-alt fa-fw"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' or request.endpoint == 'search' %}active{% endif %}">
+                                <i class="fas fa-search fa-fw"></i>
+                                <span>Pesquisar</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-category">Departamentos</li>
+                        {% if 'admin_patrimonio' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('patrimonio_dashboard') }}" class="nav-link {% if 'patrimonio' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-box-open fa-fw"></i>
+                                <span>Patrimônio</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('patrimonio_relatorios') }}" class="nav-link {% if 'patrimonio_relatorios' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-chart-pie fa-fw"></i>
+                                <span>Relatórios Patrimônio</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if 'admin_cobranca' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('cobranca_dashboard') }}" class="nav-link {% if 'cobranca' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-hand-holding-usd fa-fw"></i>
+                                <span>Cobrança</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if 'admin_contas_a_pagar' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('contas_a_pagar_dashboard') }}" class="nav-link {% if 'contas_a_pagar' in request.endpoint or 'documentos_diversos' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-file-invoice-dollar fa-fw"></i>
+                                <span>Contas a Pagar</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                         {% if 'admin_rh' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('rh_dashboard') }}" class="nav-link {% if 'rh' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-users fa-fw"></i>
+                                <span>RH</span>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% if 'super_admin' in session.get('role', '') %}
+                        <li class="nav-category">Administração</li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('user_management') }}" class="nav-link {% if 'user_management' in request.endpoint or 'user_edit' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-users-cog fa-fw"></i>
+                                <span>Gerir Usuários</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('manage_stores') }}" class="nav-link {% if 'manage_stores' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-store-alt fa-fw"></i>
+                                <span>Gerir Empresas</span>
+                            </a>
+                        </li>
+                         <li class="nav-item">
+                            <a href="{{ url_for('manage_attributes') }}" class="nav-link {% if 'manage_attributes' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-tags fa-fw"></i>
+                                <span>Gerir Atributos</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                             <a href="{{ url_for('audit_log') }}" class="nav-link {% if 'audit' in request.endpoint %}active{% endif %}">
+                                <i class="fas fa-history fa-fw"></i>
+                                <span>Log de Auditoria</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="theme-switcher">
+                    <i class="fas fa-sun"></i>
+                    <div class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <label for="theme-toggle"></label>
+                    </div>
+                    <i class="fas fa-moon"></i>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <h2>{% block page_title %}{% endblock %}</h2>
+                </div>
+                <div class="header-right">
+                    {% if session.logged_in %}
+                    <div class="user-menu">
+                        <span class="user-greeting">Olá, <strong>{{ session.username }}</strong>!</span>
+                        <div class="user-dropdown">
+                            <button class="user-avatar" onclick="toggleDropdown()">
+                                <i class="fas fa-user"></i>
+                            </button>
+                            <div class="dropdown-content" id="user-dropdown-menu">
+                                <a href="{{ url_for('change_password') }}"><i class="fas fa-key fa-fw"></i> Alterar Senha</a>
+                                <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt fa-fw"></i> Sair</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('admin_login') }}" class="button-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    {% endif %}
+                </div>
+            </header>
+
+            <main>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="messages-wrapper">
+                        {% for category, message in messages %}
+                            <div class="message {{ category }}">
+                                <p>{{ message }}</p>
+                                <button class="close-message" onclick="this.parentElement.style.display='none';">&times;</button>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Lógica para o menu dropdown do usuário
+        function toggleDropdown() {
+            document.getElementById("user-dropdown-menu").classList.toggle("show");
+        }
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-avatar, .user-avatar *')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+        
+        // Lógica do Theme Switcher
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            
+            html.setAttribute('data-theme', savedTheme);
+            if (themeToggle) {
+                themeToggle.checked = savedTheme === 'dark';
+                themeToggle.addEventListener('change', function() {
+                    const theme = this.checked ? 'dark' : 'light';
+                    html.setAttribute('data-theme', theme);
+                    localStorage.setItem('theme', theme);
+                });
+            }
+        });
+    </script>
+     {% block scripts %}{% endblock %}
 </body>
 </html>

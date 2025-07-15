@@ -322,8 +322,44 @@ def change_password():
 @login_required
 @role_required(['super_admin'])
 def super_admin_dashboard():
-    return render_template('super_admin/super_admin_dashboard.html')
+    db = get_db()
+    
+    # --- Métricas Principais (KPIs) ---
+    total_users = db.execute("SELECT COUNT(id) FROM users").fetchone()[0]
+    total_stores = db.execute("SELECT COUNT(id) FROM stores").fetchone()[0]
+    total_patrimonio = db.execute("SELECT COUNT(id) FROM patrimonio_items").fetchone()[0]
+    total_cobrancas = db.execute("SELECT COUNT(id) FROM cobranca_fichas_acerto").fetchone()[0]
+    total_pagamentos = db.execute("SELECT COUNT(id) FROM contas_a_pagar_pagamentos").fetchone()[0]
 
+    # --- Análise de Utilizadores ---
+    # Contagem de utilizadores por função para o gráfico
+    users_by_role_raw = db.execute("SELECT role, COUNT(id) as count FROM users GROUP BY role").fetchall()
+    users_by_role = {row['role'].replace('_', ' ').title(): row['count'] for row in users_by_role_raw}
+
+    # Top 5 utilizadores mais ativos (com base no número de logs)
+    most_active_users = db.execute("""
+        SELECT username, COUNT(id) as action_count 
+        FROM audit_log 
+        WHERE username IS NOT NULL
+        GROUP BY username 
+        ORDER BY action_count DESC 
+        LIMIT 5
+    """).fetchall()
+
+    # --- Atividade Recente ---
+    recent_logs = db.execute("SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 5").fetchall()
+
+    return render_template(
+        'super_admin/super_admin_dashboard.html',
+        total_users=total_users,
+        total_stores=total_stores,
+        total_patrimonio=total_patrimonio,
+        total_cobrancas=total_cobrancas,
+        total_pagamentos=total_pagamentos,
+        users_by_role=users_by_role,
+        most_active_users=most_active_users,
+        recent_logs=recent_logs
+    )
 
 @app.route('/super_admin/audit_log')
 @login_required
@@ -439,9 +475,9 @@ def user_management():
     where_clauses = []
     if search_query:
         search_term = f"%{search_query}%"
-        search_clauses = ["u.username LIKE ?", "u.role LIKE ?", "s.name LIKE ?"]
-        where_clauses.append(f"({' OR '.join(search_clauses)})")
-        params.extend([search_term] * len(search_clauses))
+        # CORREÇÃO: Simplifica a lógica da cláusula WHERE
+        where_clauses.append("(u.username LIKE ? OR u.role LIKE ? OR s.name LIKE ?)")
+        params.extend([search_term, search_term, search_term])
     
     base_query = "FROM users u LEFT JOIN stores s ON u.store_id = s.id"
     if where_clauses:

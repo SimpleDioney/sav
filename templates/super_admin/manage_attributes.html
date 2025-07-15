@@ -2,34 +2,25 @@
 
 {% block title %}Gerenciar Atributos de Equipamentos{% endblock %}
 
-{% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
-</div>
+{% block page_title %}Gerenciar Atributos de Equipamentos{% endblock %}
 
+{% block content %}
 <div class="card">
     <h2><i class="fas fa-cubes"></i> Gerenciar Tipos de Equipamento</h2>
-    <div class="form-section">
-        <form action="{{ url_for('add_tipo') }}" method="POST">
-            <label for="nome_tipo">Nome do Novo Tipo:</label>
-            <input type="text" id="nome_tipo" name="nome_tipo" required>
-            <button type="submit"><i class="fas fa-plus"></i> Adicionar Tipo</button>
-        </form>
-    </div>
+    <form action="{{ url_for('add_tipo') }}" method="POST" class="form-section">
+        <label for="nome_tipo">Nome do Novo Tipo:</label>
+        <input type="text" id="nome_tipo" name="nome_tipo" required>
+        <button type="submit" style="align-self: flex-start;"><i class="fas fa-plus"></i> Adicionar Tipo</button>
+    </form>
     <div class="table-wrapper">
         <table>
-            <thead>
-                <tr>
-                    <th>Tipo</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Tipo</th><th>Ação</th></tr></thead>
             <tbody>
                 {% for tipo in tipos %}
                 <tr>
                     <td>{{ tipo.nome }}</td>
                     <td class="actions">
-                        <form action="{{ url_for('delete_tipo', tipo_id=tipo.id) }}" method="POST" onsubmit="return confirm('Atenção! Excluir este tipo também removerá todas as marcas e tamanhos associados. Deseja continuar?');">
+                        <form action="{{ url_for('delete_tipo', tipo_id=tipo.id) }}" method="POST" onsubmit="return confirm('Atenção! Excluir este tipo também removerá todas as marcas associadas. Deseja continuar?');">
                             <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
                         </form>
                     </td>
@@ -42,29 +33,19 @@
 
 <div class="card">
     <h2><i class="fas fa-tags"></i> Gerenciar Marcas</h2>
-    <div class="form-section">
-        <form action="{{ url_for('add_marca') }}" method="POST">
-            <label for="tipo_id_marca">Associar Marca ao Tipo:</label>
-            <select id="tipo_id_marca" name="tipo_id" required>
-                <option value="">Selecione um tipo</option>
-                {% for tipo in tipos %}
-                <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
-                {% endfor %}
-            </select>
-            <label for="nome_marca">Nome da Nova Marca:</label>
-            <input type="text" id="nome_marca" name="nome_marca" required>
-            <button type="submit"><i class="fas fa-plus"></i> Adicionar Marca</button>
-        </form>
-    </div>
+    <form action="{{ url_for('add_marca') }}" method="POST" class="form-section">
+        <label for="tipo_id_marca">Associar Marca ao Tipo:</label>
+        <select id="tipo_id_marca" name="tipo_id" required>
+            <option value="">Selecione um tipo</option>
+            {% for tipo in tipos %}<option value="{{ tipo.id }}">{{ tipo.nome }}</option>{% endfor %}
+        </select>
+        <label for="nome_marca">Nome da Nova Marca:</label>
+        <input type="text" id="nome_marca" name="nome_marca" required>
+        <button type="submit" style="align-self: flex-start;"><i class="fas fa-plus"></i> Adicionar Marca</button>
+    </form>
     <div class="table-wrapper">
         <table>
-            <thead>
-                <tr>
-                    <th>Tipo Associado</th>
-                    <th>Marca</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Tipo Associado</th><th>Marca</th><th>Ação</th></tr></thead>
             <tbody>
                 {% for marca in marcas %}
                 <tr>
@@ -84,21 +65,14 @@
 
 <div class="card">
     <h2><i class="fas fa-ruler-combined"></i> Gerenciar Tamanhos</h2>
-    <div class="form-section">
-        <form action="{{ url_for('add_tamanho') }}" method="POST">
-            <label for="nome_tamanho">Nome do Novo Tamanho:</label>
-            <input type="text" id="nome_tamanho" name="nome_tamanho" required>
-            <button type="submit"><i class="fas fa-plus"></i> Adicionar Tamanho</button>
-        </form>
-    </div>
+    <form action="{{ url_for('add_tamanho') }}" method="POST" class="form-section">
+        <label for="nome_tamanho">Nome do Novo Tamanho:</label>
+        <input type="text" id="nome_tamanho" name="nome_tamanho" required>
+        <button type="submit" style="align-self: flex-start;"><i class="fas fa-plus"></i> Adicionar Tamanho</button>
+    </form>
     <div class="table-wrapper">
         <table>
-            <thead>
-                <tr>
-                    <th>Tamanho</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Tamanho</th><th>Ação</th></tr></thead>
             <tbody>
                 {% for tamanho in tamanhos %}
                 <tr>

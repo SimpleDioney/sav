@@ -2,71 +2,57 @@
 
 {% block title %}Painel Cobrança{% endblock %}
 
+{% block page_title %}Gestão de Cobrança{% endblock %}
+
 {% block content %}
 <div class="card">
-    <div class="admin-nav">
-        {% if session.store_name %}<span class="store-info"><i class="fas fa-store"></i> {{ session.store_name }}</span>{% endif %}
-        {% if session.role == 'super_admin' %}<a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-user-shield"></i> Dashboard Super Admin</a>{% endif %}
-        <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a>
-    </div>
-
-    <h2><i class="fas fa-hand-holding-usd"></i> Adicionar Ficha de Acerto</h2>
-    <div class="form-section">
-        <form action="{{ url_for('cobranca_dashboard') }}" method="POST" data-ajax="true">
-            {% if session.role == 'super_admin' %}
-            <label for="store_id">Empresa:</label>
-            <select id="store_id" name="store_id" required>
-                <option value="">Selecione uma empresa</option>
-                {% for store in stores %}<option value="{{ store.id }}">{{ store.name }}</option>{% endfor %}
-            </select>
-            {% endif %}
-            
-            <label for="ficha_acerto">Ficha de Acerto:</label>
-            <input type="text" id="ficha_acerto" name="ficha_acerto" required>
-            
-            <label for="caixa">Caixa:</label>
-            <input type="text" id="caixa" name="caixa" required>
-            
-            <label for="range_cliente_inicio">Range Cliente (Início):</label>
-            <input type="number" id="range_cliente_inicio" name="range_cliente_inicio" required>
-            
-            <label for="range_cliente_fim">Range Cliente (Fim):</label>
-            <input type="number" id="range_cliente_fim" name="range_cliente_fim" required>
-            
-            <button type="submit"><i class="fas fa-plus"></i> Adicionar Ficha</button>
-        </form>
-    </div>
-
-    <h2><i class="fas fa-list-ol"></i> Fichas de Acerto Existentes</h2>
-    
-    <div class="dashboard-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <div class="in-page-search">
-        <form method="GET" action="{{ url_for('cobranca_dashboard') }}" class="filter-form">
-            <div class="filter-controls">
-                <input type="text" name="search" placeholder="Buscar em todos os registros..." value="{{ search or '' }}">
-                <button type="submit" class="filter-btn"><i class="fas fa-search"></i> Buscar</button>
-                {% if search %}
-                <a href="{{ url_for('cobranca_dashboard') }}" class="clear-btn">Limpar</a>
-                {% endif %}
-            </div>
-        </form>
-    </div>
-    <div>
-        <a href="{{ url_for('cobranca_export_excel') }}" class="export-button">
-            <i class="fas fa-file-excel"></i> Exportar para Excel
-        </a>
-    </div>
+    <h2><i class="fas fa-plus"></i> Adicionar Nova Ficha de Acerto</h2>
+    <form action="{{ url_for('cobranca_dashboard') }}" method="POST">
+        {% if session.role == 'super_admin' %}
+        <label for="store_id">Empresa:</label>
+        <select id="store_id" name="store_id" required>
+            <option value="">Selecione uma empresa</option>
+            {% for store in stores %}<option value="{{ store.id }}">{{ store.name }}</option>{% endfor %}
+        </select>
+        {% endif %}
+        
+        <label for="ficha_acerto">Ficha de Acerto:</label>
+        <input type="text" id="ficha_acerto" name="ficha_acerto" required>
+        
+        <label for="caixa">Caixa:</label>
+        <input type="text" id="caixa" name="caixa" required>
+        
+        <label for="range_cliente_inicio">Range Cliente (Início):</label>
+        <input type="number" id="range_cliente_inicio" name="range_cliente_inicio" required>
+        
+        <label for="range_cliente_fim">Range Cliente (Fim):</label>
+        <input type="number" id="range_cliente_fim" name="range_cliente_fim" required>
+        
+        <button type="submit"><i class="fas fa-plus"></i> Adicionar Ficha</button>
+    </form>
 </div>
 
-
+<div class="card">
+    <h2><i class="fas fa-list-ol"></i> Fichas de Acerto Existentes</h2>
     
+    <div class="dashboard-actions">
+        <form method="GET" action="{{ url_for('cobranca_dashboard') }}" class="filter-form">
+            <input type="text" name="search" placeholder="Buscar em todos os registros..." value="{{ search or '' }}">
+            <button type="submit"><i class="fas fa-search"></i></button>
+            {% if search %}
+            <a href="{{ url_for('cobranca_dashboard') }}" class="button-secondary">Limpar</a>
+            {% endif %}
+        </form>
+        <a href="{{ url_for('cobranca_export_excel') }}" class="export-button">
+            <i class="fas fa-file-excel"></i> Exportar
+        </a>
+    </div>
 
     <div class="table-wrapper">
         {% if fichas_acerto %}
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         {% if session.role == 'super_admin' %}<th>Empresa</th>{% endif %}
                         <th>Ficha de Acerto</th>
                         <th>Caixa</th>
@@ -77,14 +63,13 @@
                 <tbody id="sortable-table">
                     {% for item in fichas_acerto %}
                         <tr data-id="{{ item.id }}">
-                            <td>{{ item.id }}</td>
                             {% if session.role == 'super_admin' %}<td>{{ item.store_name or 'N/A' }}</td>{% endif %}
                             <td>{{ item.ficha_acerto }}</td>
                             <td>{{ item.caixa }}</td>
                             <td>{{ item.range_cliente_inicio }} - {{ item.range_cliente_fim }}</td>
                             <td class="actions">
                                 <a href="{{ url_for('cobranca_fichas_acerto_edit', item_id=item.id) }}" class="edit" title="Editar"><i class="fas fa-edit"></i></a>
-                                <form action="{{ url_for('cobranca_fichas_acerto_delete', item_id=item.id) }}" method="POST" style="display:inline;" data-ajax="true">
+                                <form action="{{ url_for('cobranca_fichas_acerto_delete', item_id=item.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta ficha?');">
                                     <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>
@@ -96,8 +81,6 @@
             <p style="text-align: center; padding: 20px;">Nenhuma ficha de acerto cadastrada ainda.</p>
         {% endif %}
     </div>
+    {% include '_pagination.html' %}
 </div>
-
-{% include '_pagination.html' %}
-
 {% endblock %}

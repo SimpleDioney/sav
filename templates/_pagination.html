@@ -1,31 +1,23 @@
+{# Este ficheiro não precisa de alterações, pois o CSS já o estiliza corretamente. #}
 {% if total_pages > 1 %}
 <div class="pagination">
-    
-    {# Copia os argumentos da URL atual e remove o 'page' para evitar duplicidade #}
     {% set new_args = request.args.copy() %}
     {% do new_args.pop('page', None) %}
 
-    <!-- Link para a página anterior -->
-    {% if page > 1 %}
-        <a href="{{ url_for(request.endpoint, page=page-1, **new_args) }}">&laquo; Anterior</a>
-    {% else %}
-        <span class="disabled">&laquo; Anterior</span>
-    {% endif %}
+    <a href="{{ url_for(request.endpoint, page=1, **new_args) }}" class="{{ 'disabled' if page == 1 else '' }}">&laquo;&laquo;</a>
+    <a href="{{ url_for(request.endpoint, page=page-1, **new_args) }}" class="{{ 'disabled' if page == 1 else '' }}">&laquo;</a>
 
-    <!-- Links para as páginas -->
     {% for p in range(1, total_pages + 1) %}
         {% if p == page %}
             <span class="current">{{ p }}</span>
-        {% else %}
+        {% elif p > page - 3 and p < page + 3 %}
             <a href="{{ url_for(request.endpoint, page=p, **new_args) }}">{{ p }}</a>
+        {% elif p == page - 3 or p == page + 3 %}
+            <span class="disabled">...</span>
         {% endif %}
     {% endfor %}
 
-    <!-- Link para a próxima página -->
-    {% if page < total_pages %}
-        <a href="{{ url_for(request.endpoint, page=page+1, **new_args) }}">Próximo &raquo;</a>
-    {% else %}
-        <span class="disabled">Próximo &raquo;</span>
-    {% endif %}
+    <a href="{{ url_for(request.endpoint, page=page+1, **new_args) }}" class="{{ 'disabled' if page == total_pages else '' }}">&raquo;</a>
+    <a href="{{ url_for(request.endpoint, page=total_pages, **new_args) }}" class="{{ 'disabled' if page == total_pages else '' }}">&raquo;&raquo;</a>
 </div>
 {% endif %}

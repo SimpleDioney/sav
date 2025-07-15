@@ -2,28 +2,24 @@
 
 {% block title %}Editar Ficha de Acerto{% endblock %}
 
+{% block page_title %}Editar Ficha de Acerto{% endblock %}
+
 {% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('cobranca_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Painel</a>
-</div>
 <div class="card">
-    <h2><i class="fas fa-edit"></i> Editar Ficha de Acerto</h2>
-    <div class="form-section">
-        <form action="{{ url_for('cobranca_fichas_acerto_edit', item_id=item.id) }}" method="POST">
-            <label for="ficha_acerto">Ficha de Acerto:</label>
-            <input type="text" id="ficha_acerto" name="ficha_acerto" value="{{ item.ficha_acerto }}" required>
-            
-            <label for="caixa">Caixa:</label>
-            <input type="text" id="caixa" name="caixa" value="{{ item.caixa }}" required>
-            
-            <label for="range_cliente_inicio">Número Cliente (De X):</label>
-            <input type="number" id="range_cliente_inicio" name="range_cliente_inicio" value="{{ item.range_cliente_inicio }}" required>
-            
-            <label for="range_cliente_fim">Número Cliente (Até Y):</label>
-            <input type="number" id="range_cliente_fim" name="range_cliente_fim" value="{{ item.range_cliente_fim }}" required>
-            
-            <button type="submit"><i class="fas fa-save"></i> Salvar Alterações</button>
-        </form>
-    </div>
+    <form action="{{ url_for('cobranca_fichas_acerto_edit', item_id=item.id) }}" method="POST">
+        <label for="ficha_acerto">Ficha de Acerto:</label>
+        <input type="text" id="ficha_acerto" name="ficha_acerto" value="{{ item.ficha_acerto }}" required>
+        
+        <label for="caixa">Caixa:</label>
+        <input type="text" id="caixa" name="caixa" value="{{ item.caixa }}" required>
+        
+        <label for="range_cliente_inicio">Número Cliente (De X):</label>
+        <input type="number" id="range_cliente_inicio" name="range_cliente_inicio" value="{{ item.range_cliente_inicio }}" required>
+        
+        <label for="range_cliente_fim">Número Cliente (Até Y):</label>
+        <input type="number" id="range_cliente_fim" name="range_cliente_fim" value="{{ item.range_cliente_fim }}" required>
+        
+        <button type="submit"><i class="fas fa-save"></i> Salvar Alterações</button>
+    </form>
 </div>
 {% endblock %}

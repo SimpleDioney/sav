@@ -2,25 +2,26 @@
 
 {% block title %}Editar Pagamento{% endblock %}
 
+{% block page_title %}Editar Pagamento{% endblock %}
+
 {% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('contas_a_pagar_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Painel</a>
-</div>
 <div class="card">
-    <h2><i class="fas fa-edit"></i> Editar Pagamento</h2>
-    <div class="form-section">
-        <form action="{{ url_for('contas_a_pagar_pagamentos_edit', item_id=item.id) }}" method="POST">
-            <label for="pagamento_data_inicio">Data Início (X):</label>
-            <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" value="{{ item.pagamento_data_inicio }}" required>
-            
-            <label for="pagamento_data_fim">Data Fim (Y):</label>
-            <input type="date" id="pagamento_data_fim" name="pagamento_data_fim" value="{{ item.pagamento_data_fim }}" required>
-            
-            <label for="caixa">Caixa:</label>
-            <input type="text" id="caixa" name="caixa" value="{{ item.caixa }}" required>
-            
-            <button type="submit"><i class="fas fa-save"></i> Salvar Alterações</button>
-        </form>
+    <div class="dashboard-actions" style="margin-bottom: 20px;">
+        <a href="{{ url_for('contas_a_pagar_dashboard') }}" class="button-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar ao Painel
+        </a>
     </div>
+    <form action="{{ url_for('contas_a_pagar_pagamentos_edit', item_id=item.id) }}" method="POST">
+        <label for="pagamento_data_inicio">Data Início (X):</label>
+        <input type="date" id="pagamento_data_inicio" name="pagamento_data_inicio" value="{{ item.pagamento_data_inicio }}" required>
+        
+        <label for="pagamento_data_fim">Data Fim (Y):</label>
+        <input type="date" id="pagamento_data_fim" name="pagamento_data_fim" value="{{ item.pagamento_data_fim }}" required>
+        
+        <label for="caixa">Caixa:</label>
+        <input type="text" id="caixa" name="caixa" value="{{ item.caixa }}" required>
+        
+        <button type="submit"><i class="fas fa-save"></i> Salvar Alterações</button>
+    </form>
 </div>
 {% endblock %}

@@ -2,15 +2,12 @@
 
 {% block title %}Gerenciar Usuários{% endblock %}
 
-{% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
-    <a href="{{ url_for('manage_stores') }}"><i class="fas fa-store-alt"></i> Gerenciar empresas</a>
-</div>
+{% block page_title %}Gerenciamento de Usuários{% endblock %}
 
-<h2><i class="fas fa-user-plus"></i> Criar Novo Usuário</h2>
-<div class="form-section">
-    <form action="{{ url_for('user_management') }}" method="POST" data-ajax="true">
+{% block content %}
+<div class="card">
+    <h2><i class="fas fa-user-plus"></i> Criar Novo Usuário</h2>
+    <form action="{{ url_for('user_management') }}" method="POST">
         <label for="username">Usuário:</label>
         <input type="text" id="username" name="username" required>
         
@@ -44,42 +41,47 @@
     </form>
 </div>
 
-<h2><i class="fas fa-users"></i> Usuários Existentes</h2>
-<div class="table-wrapper">
-    {% if users %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Usuário</th>
-                    <th>Função</th>
-                    <th>Empresa</th>
-                    <th>Pode Criar?</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                    <tr data-id="{{ user.id }}">
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.role | replace('_', ' ') | title }}</td>
-                        <td>{{ user.store_name or 'N/A' }}</td>
-                        <td>{{ 'Sim' if user.can_add_users else 'Não' }}</td>
-                        <td class="actions">
-                            <a href="{{ url_for('user_edit', user_id=user.id) }}" class="edit" title="Editar"><i class="fas fa-edit"></i></a>
-                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;" class="delete-form" data-ajax="true">
-                                <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-                            </form>
-                        </td>
+<div class="card">
+    <h2><i class="fas fa-users"></i> Usuários Existentes</h2>
+    <div class="dashboard-actions">
+        <form method="GET" action="{{ url_for('user_management') }}" class="filter-form">
+            <input type="text" name="search" placeholder="Buscar por usuário ou empresa..." value="{{ search or '' }}">
+            <button type="submit" class="button-primary" style="padding: 10px 15px;"><i class="fas fa-search"></i></button>
+        </form>
+        </div>
+    <div class="table-wrapper">
+        {% if users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Função</th>
+                        <th>Empresa</th>
+                        <th>Pode Criar?</th>
+                        <th>Ações</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p style="text-align: center; padding: 20px;">Nenhum usuário cadastrado ainda.</p>
-    {% endif %}
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr data-id="{{ user.id }}">
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.role | replace('_', ' ') | title }}</td>
+                            <td>{{ user.store_name or 'N/A' }}</td>
+                            <td>{{ 'Sim' if user.can_add_users else 'Não' }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('user_edit', user_id=user.id) }}" class="edit" title="Editar"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o usuário {{ user.username }}?');">
+                                    <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhum usuário cadastrado ainda.</p>
+        {% endif %}
+    </div>
+    {% include '_pagination.html' %}
 </div>
-
-{% include '_pagination.html' %}
 {% endblock %}

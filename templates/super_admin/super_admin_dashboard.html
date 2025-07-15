@@ -2,41 +2,164 @@
 
 {% block title %}Dashboard Super Admin{% endblock %}
 
+{% block page_title %}Dashboard do Administrador{% endblock %}
+
 {% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('user_management') }}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
-    <a href="{{ url_for('manage_stores') }}"><i class="fas fa-store-alt"></i> Gerenciar Empresas</a>
-        <a href="{{ url_for('manage_attributes') }}"><i class="fas fa-tags"></i> Gerenciar Atributos</a>
-    <a href="{{ url_for('audit_log') }}"><i class="fas fa-history"></i> Log de Auditoria</a>
-    <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+<div class="dashboard-container">
+    <div class="main-column">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="card-icon" style="background-color: #e0f2fe;"><i class="fas fa-users" style="color: #0ea5e9;"></i></div>
+                <div class="card-content"><span class="card-title">Total de Usuários</span><span class="card-value">{{ total_users }}</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="card-icon" style="background-color: #dcfce7;"><i class="fas fa-store-alt" style="color: #22c55e;"></i></div>
+                <div class="card-content"><span class="card-title">Total de Empresas</span><span class="card-value">{{ total_stores }}</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="card-icon" style="background-color: #fef3c7;"><i class="fas fa-box-open" style="color: #f59e0b;"></i></div>
+                <div class="card-content"><span class="card-title">Itens de Patrimônio</span><span class="card-value">{{ total_patrimonio }}</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="card-icon" style="background-color: #fee2e2;"><i class="fas fa-hand-holding-usd" style="color: #ef4444;"></i></div>
+                <div class="card-content"><span class="card-title">Fichas de Cobrança</span><span class="card-value">{{ total_cobrancas }}</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-history"></i> Atividade Recente no Sistema</h2>
+            <div class="table-wrapper">
+                {% if recent_logs %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Alvo</th>
+                            <th style="text-align: right;">Data/Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in recent_logs %}
+                            <tr>
+                                <td>{{ log.username or 'Sistema' }}</td>
+                                <td><span class="action-tag">{{ log.action | replace('_', ' ') | title }}</span></td>
+                                <td>
+                                    {% if log.target_name %}{{ log.target_type | replace('_', ' ') | title }}: {{ log.target_name }}{% elif log.target_id %}ID: {{ log.target_id }}{% else %}N/A{% endif %}
+                                </td>
+                                <td style="white-space: nowrap; text-align: right;">{{ log.timestamp | datetime }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="text-align: center; padding: 20px;">Nenhuma atividade registrada ainda.</p>
+                {% endif %}
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <a href="{{ url_for('audit_log') }}" class="button-secondary">Ver Log Completo <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-column">
+        <div class="card">
+            <h2><i class="fas fa-chart-pie"></i> Usuários por Função</h2>
+            <div class="chart-container">
+                <canvas id="usersByRoleChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h2><i class="fas fa-running"></i> Usuários Mais Ativos</h2>
+            <ul class="activity-list">
+                {% for user in most_active_users %}
+                <li>
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ user.username }}</span>
+                    </div>
+                    <span class="activity-count">{{ user.action_count }} ações</span>
+                </li>
+                {% else %}
+                <li style="justify-content: center;">Nenhuma atividade de usuário registrada.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 </div>
 
-<h2><i class="fas fa-th-large"></i> Acessar Arquivos por Departamento:</h2>
+<style>
+    .dashboard-container { display: flex; gap: 25px; align-items: flex-start; }
+    .main-column { flex: 2; }
+    .side-column { flex: 1; display: flex; flex-direction: column; gap: 25px; }
 
-<div class="dashboard-grid">
-    <a href="{{ url_for('patrimonio_dashboard') }}" class="dashboard-card">
-        <div class="icon"><i class="fas fa-box-open"></i></div>
-        <span>Patrimônio</span>
-    </a>
-    <a href="{{ url_for('rh_dashboard') }}" class="dashboard-card">
-        <div class="icon"><i class="fas fa-users"></i></div>
-        <span>RH</span>
-    </a>
-    <a href="{{ url_for('contas_a_pagar_dashboard') }}" class="dashboard-card">
-        <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
-        <span>Contas a Pagar (Pagamentos)</span>
-    </a>
-    <a href="{{ url_for('documentos_diversos_dashboard') }}" class="dashboard-card">
-        <div class="icon"><i class="fas fa-folder-open"></i></div>
-        <span>Contas a Pagar (Documentos)</span>
-    </a>
-    <a href="{{ url_for('cobranca_dashboard') }}" class="dashboard-card">
-        <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
-        <span>Cobrança</span>
-    </a>
-    <a href="{{ url_for('patrimonio_relatorios') }}" class="dashboard-card">
-        <div class="icon"><i class="fas fa-chart-pie"></i></div>
-        <span>Relatórios de Patrimônio</span>
-    </a>
-</div>
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+    .kpi-card { background-color: var(--bg-secondary); border-radius: var(--border-radius-md); padding: 20px; display: flex; align-items: center; gap: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+    .kpi-card .card-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .kpi-card .card-content { display: flex; flex-direction: column; }
+    .kpi-card .card-title { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; }
+    .kpi-card .card-value { font-size: 2rem; font-weight: 700; color: var(--text-primary); }
+    
+    .action-tag { background-color: var(--bg-primary); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; }
+    .button-secondary { background-color: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); }
+    .button-secondary:hover { background-color: var(--border-color); }
+
+    .chart-container { position: relative; height: 250px; }
+    .activity-list { list-style: none; padding: 0; }
+    .activity-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+    .activity-list li:last-child { border-bottom: none; }
+    .activity-list .user-info { display: flex; align-items: center; gap: 12px; font-weight: 500; }
+    .activity-list .user-info i { color: var(--text-secondary); font-size: 1.5rem; }
+    .activity-list .activity-count { font-size: 0.9rem; font-weight: 600; color: var(--color-primary); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('usersByRoleChart');
+    if (ctx) {
+        // Dados do gráfico passados pelo Flask
+        const usersByRoleData = {{ users_by_role | tojson }};
+        const labels = Object.keys(usersByRoleData);
+        const data = Object.values(usersByRoleData);
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Usuários por Função',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)',
+                        'rgba(34, 197, 94, 0.7)',
+                        'rgba(245, 158, 11, 0.7)',
+                        'rgba(239, 68, 68, 0.7)',
+                        'rgba(139, 92, 246, 0.7)'
+                    ],
+                    borderColor: 'var(--bg-secondary)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'var(--text-secondary)',
+                            font: {
+                                family: "'Inter', sans-serif"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

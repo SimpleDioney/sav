@@ -2,16 +2,11 @@
 
 {% block title %}Painel RH{% endblock %}
 
+{% block page_title %}Departamento de RH{% endblock %}
+
 {% block content %}
 <div class="card">
-    <div class="admin-nav">
-        {% if session.role == 'super_admin' %}
-            <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-user-shield"></i> Dashboard Super Admin</a>
-        {% endif %}
-        <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a>
-    </div>
-
-    <h2><i class="fas fa-users"></i> Painel RH</h2>
-    <p>Bem-vindo ao Painel do Departamento de RH. As funcionalidades de adição e visualização de arquivos serão implementadas aqui.</p>
+    <h2><i class="fas fa-users"></i> Painel de Recursos Humanos</h2>
+    <p>Bem-vindo ao Painel do Departamento de RH. Futuras funcionalidades de gestão de funcionários e documentos serão implementadas aqui.</p>
 </div>
 {% endblock %}

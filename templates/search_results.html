@@ -2,18 +2,17 @@
 
 {% block title %}Resultados da Pesquisa{% endblock %}
 
-{% block body_attributes %}data-page-type="search-results"{% endblock %}
+{% block page_title %}Resultados da Pesquisa{% endblock %}
 
 {% block content %}
 <div class="card">
-    <div class="admin-nav">
-        <a href="{{ url_for('index') }}"><i class="fas fa-arrow-left"></i> Nova Pesquisa</a>
+    <div class="dashboard-actions">
+        <p>Pesquisando por <strong>"{{ query }}"</strong> em <strong>{{ search_by | replace('_', ' ') | title }}</strong></p>
+        <a href="{{ url_for('index') }}" class="button-secondary"><i class="fas fa-arrow-left"></i> Nova Pesquisa</a>
     </div>
 
-    <h2><i class="fas fa-poll"></i> Resultados da Pesquisa</h2>
-
     {% if not results %}
-        <p style="text-align: center; padding: 20px;">Nenhum resultado encontrado para "<strong>{{ query }}</strong>" pesquisando em "<strong>{{ search_by | replace('_', ' ') | title }}</strong>".</p>
+        <p style="text-align: center; padding: 40px;">Nenhum resultado encontrado.</p>
     {% else %}
         {# LÓGICA PARA EXIBIR RESULTADOS DA BUSCA POR CAIXA #}
         {% if search_by == 'numero_caixa' %}

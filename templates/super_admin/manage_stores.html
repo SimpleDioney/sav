@@ -2,22 +2,19 @@
 
 {% block title %}Gerenciar Empresas{% endblock %}
 
-{% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('super_admin_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
-    <a href="{{ url_for('user_management') }}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
-</div>
+{% block page_title %}Gerenciamento de Empresas{% endblock %}
 
-<h2><i class="fas fa-store-alt"></i> Criar Nova Empresa</h2>
-<div class="form-section">
-    <form action="{{ url_for('manage_stores') }}" method="POST" data-ajax="true">
+{% block content %}
+<div class="card">
+    <h2><i class="fas fa-store-alt"></i> Criar Nova Empresa</h2>
+    <form action="{{ url_for('manage_stores') }}" method="POST">
         <label for="name">Nome da empresa:</label>
         <input type="text" id="name" name="name" required>
 
         <label>Departamentos da empresa:</label>
-        <div class="department-checkboxes">
+        <div class="department-checkboxes" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; padding: 15px; border: 1px solid var(--border-color); border-radius: var(--border-radius-md);">
             {% for dept in available_departments %}
-            <label for="{{ dept }}">
+            <label class="inline-checkbox">
                 <input type="checkbox" id="{{ dept }}" name="departments" value="{{ dept }}">
                 <span class="checkbox-custom-display"></span>
                 <span>{{ dept.replace('_', ' ') | title }}</span>
@@ -25,42 +22,40 @@
             {% endfor %}
         </div>
 
-        <button type="submit"><i class="fas fa-plus"></i> Criar empresa</button>
+        <button type="submit"><i class="fas fa-plus"></i> Criar Empresa</button>
     </form>
 </div>
 
-<h2><i class="fas fa-list-ul"></i> Empresas Existentes</h2>
-<div class="table-wrapper">
-    {% if stores %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome da empresa</th>
-                    <th>Departamentos</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for store in stores %}
-                    <tr data-id="{{ store.id }}">
-                        <td>{{ store.id }}</td>
-                        <td>{{ store.name }}</td>
-                        <td>{{ (store.departments | replace('_', ' ') | title) if store.departments else 'Nenhum' }}</td>
-                        <td class="actions">
-                            <form action="{{ url_for('delete_store', store_id=store.id) }}" method="POST" style="display:inline;" class="delete-form" data-ajax="true">
-                                <button type="submit" title="Excluir" class="delete"><i class="fas fa-trash-alt"></i></button>
-                            </form>
-                        </td>
+<div class="card">
+    <h2><i class="fas fa-list-ul"></i> Empresas Existentes</h2>
+    <div class="table-wrapper">
+        {% if stores %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome da empresa</th>
+                        <th>Departamentos</th>
+                        <th>Ações</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p style="text-align: center; padding: 20px;">Nenhuma empresa cadastrada ainda.</p>
-    {% endif %}
+                </thead>
+                <tbody>
+                    {% for store in stores %}
+                        <tr data-id="{{ store.id }}">
+                            <td>{{ store.name }}</td>
+                            <td>{{ (store.departments | replace('_', ' ') | title) if store.departments else 'Nenhum' }}</td>
+                            <td class="actions">
+                                <form action="{{ url_for('delete_store', store_id=store.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir a EMPRESA {{ store.name }}?');">
+                                    <button type="submit" title="Excluir" class="delete"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; padding: 20px;">Nenhuma empresa cadastrada.</p>
+        {% endif %}
+    </div>
+    {% include '_pagination.html' %}
 </div>
-
-{% include '_pagination.html' %}
-
 {% endblock %}

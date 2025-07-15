@@ -2,19 +2,20 @@
 
 {% block title %}Editar Documento Diverso{% endblock %}
 
+{% block page_title %}Editar Documento Diverso{% endblock %}
+
 {% block content %}
-<div class="admin-nav">
-    <a href="{{ url_for('documentos_diversos_dashboard') }}"><i class="fas fa-arrow-left"></i> Voltar ao Painel</a>
-</div>
 <div class="card">
-    <h2><i class="fas fa-edit"></i> Editar Documento Diverso</h2>
-    <div class="form-section">
-        <form action="{{ url_for('contas_a_pagar_diversos_edit', item_id=item.id) }}" method="POST">
-            <label for="numero_caixa">Número da Caixa:</label>
-            <input type="text" id="numero_caixa" name="numero_caixa" value="{{ item.numero_caixa }}" required>
-            
-            <button type="submit"><i class="fas fa-save"></i> Salvar Alterações</button>
-        </form>
+    <div class="dashboard-actions" style="margin-bottom: 20px;">
+        <a href="{{ url_for('documentos_diversos_dashboard') }}" class="button-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar ao Painel
+        </a>
     </div>
+    <form action="{{ url_for('contas_a_pagar_diversos_edit', item_id=item.id) }}" method="POST">
+        <label for="numero_caixa">Número da Caixa:</label>
+        <input type="text" id="numero_caixa" name="numero_caixa" value="{{ item.numero_caixa }}" required>
+        
+        <button type="submit"><i class="fas fa-save"></i> Salvar Alterações</button>
+    </form>
 </div>
 {% endblock %}

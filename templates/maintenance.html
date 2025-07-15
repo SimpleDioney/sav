@@ -1,96 +1,62 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Interrompido</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-red: #D32F2F;
-            --dark-gray: #212529;
-            --medium-gray: #6c757d;
-            --light-gray: #f8f9fa;
-            --white: #ffffff;
-        }
-
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Inter', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: var(--light-gray);
+            background-color: #f0f2f5;
         }
-
         .container {
             text-align: center;
-            background: var(--white);
-            padding: 50px 60px;
+            background: #ffffff;
+            padding: 40px 50px;
             border-radius: 12px;
-            box-shadow: 0 15px 35px rgba(44, 62, 80, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             max-width: 600px;
             width: 90%;
-            border-top: 8px solid var(--primary-red);
-            transform: translateY(-20px);
-            opacity: 0;
-            animation: fadeIn 0.8s ease-out forwards;
+            border-top: 6px solid #ef4444; /* Vermelho perigo */
         }
-
         .icon-wrapper {
-            font-size: 5rem;
-            color: var(--primary-red);
-            margin-bottom: 25px;
-            animation: icon-pop 0.5s 0.5s ease-out backwards;
+            font-size: 4rem;
+            color: #ef4444;
+            margin-bottom: 20px;
         }
-
         h1 {
-            font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            font-size: 2.5rem;
-            color: var(--dark-gray);
-            margin: 0 0 20px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 2rem;
+            color: #111827;
+            margin: 0 0 15px 0;
         }
-
         p {
-            font-size: 1.15rem;
-            color: var(--medium-gray);
-            line-height: 1.7;
-            margin-bottom: 25px;
+            font-size: 1.1rem;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 20px;
         }
-
         .reason {
             font-weight: 500;
-            font-family: 'Montserrat', sans-serif;
-            color: var(--dark-gray);
+            color: #111827;
+            background-color: #fee2e2;
+            padding: 15px;
+            border-radius: 8px;
         }
-
         .footer-note {
-            margin-top: 40px;
+            margin-top: 30px;
             font-size: 0.9rem;
-            color: #adb5bd;
+            color: #9ca3af;
         }
-
-        /* Animações */
-        @keyframes fadeIn {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes icon-pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            80% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
     </style>
 </head>
 <body>
@@ -99,10 +65,10 @@
             <i class="fas fa-exclamation-triangle"></i>
         </div>
         <h1>Acesso Interrompido</h1>
-        <p>Este sistema foi desativado por falta de pagamento mensal.</p>
-        <p class="reason">Para regularizar a situação e discutir a reativação do acesso, é imperativo que entre em contato com o administrador (43) 99196-4950.</p>
+        <p>Este sistema foi desativado temporariamente.</p>
+        <p class="reason">Para regularizar a situação e discutir a reativação do acesso, é imperativo que entre em contato com o administrador pelo telefone: <strong>(43) 99196-4950</strong>.</p>
         <div class="footer-note">
-            Todas as tentativas de acesso são monitoradas e registradas.
+            Todas as tentativas de acesso são monitoradas.
         </div>
     </div>
 </body>
