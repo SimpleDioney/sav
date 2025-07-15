@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (codigo) {
                 try {
-                    let url = `${scriptRoot}/api/cliente/${codigo}`;
+                    let url = `arquivos/api/cliente/${codigo}`;
                     // Adiciona store_id como parâmetro de consulta para a API
                     if (storeId) {
                         url += `?store_id=${storeId}`;
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (tipoId) {
                 try {
-                    const url = `${scriptRoot}/api/marcas/${tipoId}`;
+                    const url = `arquivos/api/marcas/${tipoId}`;
                     const response = await fetch(url);
                     if (!response.ok) throw new Error('Falha na resposta da rede');
                     
