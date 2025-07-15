@@ -126,6 +126,11 @@ body {
     padding: 20px 30px;
     transition: margin-left var(--transition-fast), width var(--transition-fast);
 }
+.main-content.full-width {
+    margin-left: 0;
+    width: 100%;
+}
+
 .main-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
 }
@@ -310,4 +315,19 @@ table tbody tr:hover { background-color: color-mix(in srgb, var(--bg-primary) 50
     background-color: var(--bg-primary);
     border-color: var(--text-secondary);
     color: var(--text-primary);
+}
+
+.footer-link {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.footer-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
 }

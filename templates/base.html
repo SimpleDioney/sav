@@ -14,7 +14,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    {% block layout_wrapper %}
     <div class="page-wrapper">
+        {% if session.logged_in %}
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-archive logo-icon"></i>
@@ -22,87 +24,85 @@
             </div>
             <nav class="sidebar-nav">
                 <ul class="nav-menu">
-                    {% if session.logged_in %}
-                        <li class="nav-item">
-                            <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' or request.endpoint == 'super_admin_dashboard' %}active{% endif %}">
-                                <i class="fas fa-tachometer-alt fa-fw"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' or request.endpoint == 'search' %}active{% endif %}">
-                                <i class="fas fa-search fa-fw"></i>
-                                <span>Pesquisar</span>
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' or request.endpoint == 'super_admin_dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt fa-fw"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' or request.endpoint == 'search' %}active{% endif %}">
+                            <i class="fas fa-search fa-fw"></i>
+                            <span>Pesquisar</span>
+                        </a>
+                    </li>
 
-                        <li class="nav-category">Departamentos</li>
-                        {% if 'admin_patrimonio' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
-                        <li class="nav-item">
-                            <a href="{{ url_for('patrimonio_dashboard') }}" class="nav-link {% if 'patrimonio' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-box-open fa-fw"></i>
-                                <span>Patrimônio</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('patrimonio_relatorios') }}" class="nav-link {% if 'patrimonio_relatorios' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-chart-pie fa-fw"></i>
-                                <span>Relatórios Patrimônio</span>
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if 'admin_cobranca' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
-                        <li class="nav-item">
-                            <a href="{{ url_for('cobranca_dashboard') }}" class="nav-link {% if 'cobranca' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-hand-holding-usd fa-fw"></i>
-                                <span>Cobrança</span>
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if 'admin_contas_a_pagar' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
-                        <li class="nav-item">
-                            <a href="{{ url_for('contas_a_pagar_dashboard') }}" class="nav-link {% if 'contas_a_pagar' in request.endpoint or 'documentos_diversos' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-file-invoice-dollar fa-fw"></i>
-                                <span>Contas a Pagar</span>
-                            </a>
-                        </li>
-                        {% endif %}
-                         {% if 'admin_rh' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
-                        <li class="nav-item">
-                            <a href="{{ url_for('rh_dashboard') }}" class="nav-link {% if 'rh' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-users fa-fw"></i>
-                                <span>RH</span>
-                            </a>
-                        </li>
-                        {% endif %}
+                    <li class="nav-category">Departamentos</li>
+                    {% if 'admin_patrimonio' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('patrimonio_dashboard') }}" class="nav-link {% if 'patrimonio_dashboard' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-box-open fa-fw"></i>
+                            <span>Patrimônio</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('patrimonio_relatorios') }}" class="nav-link {% if 'patrimonio_relatorios' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-chart-pie fa-fw"></i>
+                            <span>Relatórios Patrimônio</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if 'admin_cobranca' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('cobranca_dashboard') }}" class="nav-link {% if 'cobranca' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-hand-holding-usd fa-fw"></i>
+                            <span>Cobrança</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if 'admin_contas_a_pagar' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('contas_a_pagar_dashboard') }}" class="nav-link {% if 'contas_a_pagar' in request.endpoint or 'documentos_diversos' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-file-invoice-dollar fa-fw"></i>
+                            <span>Contas a Pagar</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                     {% if 'admin_rh' in session.get('role', '') or 'super_admin' in session.get('role', '') %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('rh_dashboard') }}" class="nav-link {% if 'rh' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-users fa-fw"></i>
+                            <span>RH</span>
+                        </a>
+                    </li>
+                    {% endif %}
 
-                        {% if 'super_admin' in session.get('role', '') %}
-                        <li class="nav-category">Administração</li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('user_management') }}" class="nav-link {% if 'user_management' in request.endpoint or 'user_edit' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-users-cog fa-fw"></i>
-                                <span>Gerir Usuários</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url_for('manage_stores') }}" class="nav-link {% if 'manage_stores' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-store-alt fa-fw"></i>
-                                <span>Gerir Empresas</span>
-                            </a>
-                        </li>
-                         <li class="nav-item">
-                            <a href="{{ url_for('manage_attributes') }}" class="nav-link {% if 'manage_attributes' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-tags fa-fw"></i>
-                                <span>Gerir Atributos</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                             <a href="{{ url_for('audit_log') }}" class="nav-link {% if 'audit' in request.endpoint %}active{% endif %}">
-                                <i class="fas fa-history fa-fw"></i>
-                                <span>Log de Auditoria</span>
-                            </a>
-                        </li>
-                        {% endif %}
+                    {% if 'super_admin' in session.get('role', '') %}
+                    <li class="nav-category">Administração</li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('user_management') }}" class="nav-link {% if 'user_management' in request.endpoint or 'user_edit' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-users-cog fa-fw"></i>
+                            <span>Gerir Usuários</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('manage_stores') }}" class="nav-link {% if 'manage_stores' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-store-alt fa-fw"></i>
+                            <span>Gerir Empresas</span>
+                        </a>
+                    </li>
+                     <li class="nav-item">
+                        <a href="{{ url_for('manage_attributes') }}" class="nav-link {% if 'manage_attributes' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-tags fa-fw"></i>
+                            <span>Gerir Atributos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                         <a href="{{ url_for('audit_log') }}" class="nav-link {% if 'audit' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-history fa-fw"></i>
+                            <span>Log de Auditoria</span>
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
             </nav>
@@ -117,8 +117,9 @@
                 </div>
             </div>
         </aside>
+        {% endif %}
 
-        <div class="main-content">
+        <div class="main-content {% if not session.logged_in %}full-width{% endif %}">
             <header class="main-header">
                 <div class="header-left">
                     <h2>{% block page_title %}{% endblock %}</h2>
@@ -137,10 +138,6 @@
                             </div>
                         </div>
                     </div>
-                    {% else %}
-                    <a href="{{ url_for('admin_login') }}" class="button-primary">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
                     {% endif %}
                 </div>
             </header>
@@ -163,9 +160,9 @@
             </main>
         </div>
     </div>
+    {% endblock layout_wrapper %}
 
     <script>
-        // Lógica para o menu dropdown do usuário
         function toggleDropdown() {
             document.getElementById("user-dropdown-menu").classList.toggle("show");
         }
@@ -181,7 +178,6 @@
             }
         }
         
-        // Lógica do Theme Switcher
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggle = document.getElementById('theme-toggle');
             const html = document.documentElement;

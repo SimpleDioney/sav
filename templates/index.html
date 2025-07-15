@@ -2,25 +2,34 @@
 
 {% block title %}Pesquisar Arquivos{% endblock %}
 
-{% block content %}
-<div class="card">
-    <h2><i class="fas fa-search"></i> Pesquisar Arquivos</h2>
-    <div class="form-section">
-        <form action="{{ url_for('search') }}" method="GET">
-            <label for="query">Termo de Pesquisa:</label>
-            <input type="text" id="query" name="query" placeholder="Digite o código, nome, patrimônio ou número do cliente" required>
-            
-            <label for="search_by">Pesquisar por:</label>
-            <select id="search_by" name="search_by">
-                <option value="codigo_cliente">Código do Cliente (Patrimônio)</option>
-                <option value="nome_cliente">Nome do Cliente (Patrimônio)</option>
-                <option value="patrimonio_especifico">Patrimônio Específico</option>
-                <option value="caixa_cobranca_range">Caixa Cobrança (Fichas de Acerto)</option>
-                <option value="numero_caixa">Por Número da Caixa</option>
-            </select>
-            
-            <button type="submit"><i class="fas fa-search"></i> Pesquisar</button>
-        </form>
+{% block layout_wrapper %}
+<div class="standalone-page">
+    <div class="card standalone-card">
+        <i class="fas fa-archive logo-icon"></i>
+        <h1>Pesquisa de Arquivos</h1>
+        <div class="form-section">
+            <form action="{{ url_for('search') }}" method="GET">
+                <div style="text-align: left;">
+                    <label for="query">Termo de Pesquisa:</label>
+                    <input type="text" id="query" name="query" placeholder="Digite o código, nome, etc." required>
+                
+                    <label for="search_by">Pesquisar por:</label>
+                    <select id="search_by" name="search_by">
+                        <option value="codigo_cliente">Código do Cliente (Patrimônio)</option>
+                        <option value="nome_cliente">Nome do Cliente (Patrimônio)</option>
+                        <option value="patrimonio_especifico">Patrimônio Específico</option>
+                        <option value="caixa_cobranca_range">Caixa Cobrança (Fichas de Acerto)</option>
+                        <option value="numero_caixa">Por Número da Caixa</option>
+                    </select>
+                </div>
+                <button type="submit" style="width: 100%; justify-content: center;"><i class="fas fa-search"></i> Pesquisar</button>
+            </form>
+        </div>
+        <a href="{{ url_for('admin_login') }}" class="button-primary" style="margin-top: 20px; text-decoration: none; width: 100%; justify-content: center;">
+             <i class="fas fa-sign-in-alt"></i> Acesso Administrativo
+        </a>
     </div>
 </div>
-{% endblock %}
+{% endblock layout_wrapper %}
+
+{% block content %}{% endblock %}
