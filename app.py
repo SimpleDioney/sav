@@ -12,6 +12,7 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.styles import Font, PatternFill 
 import firebase_admin
 from firebase_admin import credentials, db
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 try:
     # Constrói um caminho absoluto para o arquivo de credenciais
@@ -31,6 +32,7 @@ except Exception as e:
     print(f"ERRO: Não foi possível inicializar o Firebase. Verifique o arquivo 'firebase-credentials.json' e a URL. Erro: {e}")
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.secret_key = '09164Duque!Paprika'
 PER_PAGE = 20  # Itens por página para paginação
 
