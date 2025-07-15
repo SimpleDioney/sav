@@ -11,17 +11,19 @@
 
 /* --- Tema Claro --- */
 [data-theme="light"] {
-    --bg-primary: #f0f2f5;         /* Fundo principal da página */
-    --bg-secondary: #ffffff;      /* Fundo de cards, tabelas, etc. */
-    --bg-sidebar: #1f2937;        /* Fundo da barra lateral */
-    --text-primary: #111827;      /* Texto principal */
-    --text-secondary: #6b7280;    /* Texto secundário, placeholders */
-    --text-on-sidebar: #d1d5db;   /* Texto na barra lateral */
-    --border-color: #e5e7eb;      /* Cor das bordas */
-    --color-primary: #3b82f6;     /* Azul primário */
-    --color-primary-hover: #2563eb;
-    --color-success: #22c55e;
-    --color-danger: #ef4444;
+    --bg-primary: #f8f9fa;         /* Fundo principal mais suave */
+    --bg-secondary: #ffffff;      /* Fundo de cards, etc. */
+    --bg-sidebar: #ffffff;        /* [MUDANÇA] Sidebar clara */
+    --text-primary: #212529;      /* Texto principal (preto suave) */
+    --text-secondary: #6c757d;    /* Texto secundário (cinza) */
+    --text-on-sidebar: #495057;   /* [MUDANÇA] Texto escuro para sidebar clara */
+    --border-color: #dee2e6;      /* Bordas mais suaves */
+    --color-primary: #4f46e5;     /* [MUDANÇA] Tom de índigo moderno */
+    --color-primary-hover: #4338ca;
+    --bg-hover-link: #f1f3f5;
+    --bg-active-link: #eef2ff;    /* [MUDANÇA] Fundo do link ativo na sidebar */
+    --color-success: #16a34a;
+    --color-danger: #dc2626;
     --color-warning: #f59e0b;
 }
 
@@ -58,14 +60,14 @@ body {
 .sidebar {
     width: 260px;
     background-color: var(--bg-sidebar);
-    color: var(--text-on-sidebar);
+    border-right: 1px solid var(--border-color); /* [MUDANÇA] Borda para separar do conteúdo */
     display: flex;
     flex-direction: column;
     position: fixed;
     top: 0;
     left: 0;
     height: 100%;
-    transition: width var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .sidebar-header {
@@ -77,7 +79,8 @@ body {
 }
 
 .logo-icon { font-size: 1.8rem; color: var(--color-primary); }
-.logo-text { font-size: 1.5rem; font-weight: 700; color: #fff; }
+.logo-text { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); } /* [MUDANÇA] Usa a cor de texto primária */
+[data-theme="dark"] .logo-text { color: #fff; } /* Exceção para o tema escuro */
 
 .sidebar-nav { flex-grow: 1; overflow-y: auto; }
 .nav-menu { list-style: none; }
@@ -100,8 +103,15 @@ body {
     color: var(--text-on-sidebar);
     transition: background-color var(--transition-fast), color var(--transition-fast);
 }
-.nav-link:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
+.nav-link:hover {
+    background-color: var(--bg-hover-link);
+    color: var(--color-primary); /* A cor do texto muda para a cor primária no hover */
+}
 .nav-link.active { background-color: var(--color-primary); color: #fff; font-weight: 600; }
+[data-theme="dark"] .nav-link.active {
+    color: #fff;
+}
+
 .nav-link i { font-size: 1.1rem; width: 20px; text-align: center; }
 
 .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
