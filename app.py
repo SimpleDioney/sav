@@ -6,9 +6,10 @@ from database import init_app, get_db
 from datetime import datetime
 import json
 import io
-import csv
 import os
-
+import openpyxl
+from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.styles import Font, PatternFill 
 import firebase_admin
 from firebase_admin import credentials, db
 
@@ -778,6 +779,98 @@ def patrimonio_dashboard():
 
     return render_template('patrimonio/patrimonio_dashboard.html', clientes=clientes_list, tipos=tipos, tamanhos=tamanhos, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
+@app.route('/patrimonio/export_excel')
+@login_required
+@role_required(['super_admin', 'admin_patrimonio'])
+def patrimonio_export_excel():
+    db = get_db()
+    
+    # A consulta ao banco de dados permanece a mesma
+    query = """
+        SELECT 
+            s.name as nome_empresa, c.codigo_cliente, c.nome_cliente, c.numero_caixa,
+            pi.codigo_patrimonio, t.nome as tipo, m.nome as marca, pi.tamanho
+        FROM clientes c
+        JOIN patrimonio_items pi ON c.id = pi.cliente_id
+        JOIN tipos_equipamento t ON pi.tipo_id = t.id
+        JOIN marcas m ON pi.marca_id = m.id
+        LEFT JOIN stores s ON c.store_id = s.id
+    """
+    params = []
+
+    if session['role'] != 'super_admin':
+        query += " WHERE c.store_id = ?"
+        params.append(session.get('store_id'))
+
+    query += " ORDER BY s.name, c.nome_cliente, pi.codigo_patrimonio"
+    
+    items = db.execute(query, params).fetchall()
+    
+    # --- Início da Criação da Planilha com Tabela Estilizada ---
+    output = io.BytesIO()
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = 'Relatório de Patrimônios'
+
+    # Adiciona o cabeçalho
+    cabecalho = ['Empresa', 'Código Cliente', 'Nome Cliente', 'Nº Caixa', 'Código Patrimônio', 'Tipo', 'Marca', 'Tamanho']
+    sheet.append(cabecalho)
+    
+    # Adiciona os dados
+    for item in items:
+        sheet.append([
+            item['nome_empresa'] or 'N/A',
+            item['codigo_cliente'],
+            item['nome_cliente'],
+            item['numero_caixa'],
+            item['codigo_patrimonio'],
+            item['tipo'],
+            item['marca'],
+            item['tamanho'] or 'N/A'
+        ])
+        
+    # --- Criação e Formatação da Tabela ---
+    
+    # Define o intervalo da tabela (da célula A1 até à última célula com dados)
+    full_range = f"A1:{openpyxl.utils.get_column_letter(sheet.max_column)}{sheet.max_row}"
+    
+    # Cria o objeto Tabela
+    tab = Table(displayName="TabelaPatrimonios", ref=full_range)
+
+    # Define um estilo visual para a tabela
+    # 'TableStyleMedium9' é um estilo azul com linhas alternadas
+    style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
+                           showLastColumn=False, showRowStripes=True, showColumnStripes=False)
+    
+    tab.tableStyleInfo = style
+    
+    # Adiciona a tabela à planilha
+    sheet.add_table(tab)
+
+    # Congela o painel do cabeçalho
+    sheet.freeze_panes = 'A2'
+
+    # Autoajusta a largura das colunas para uma visualização perfeita
+    for col in sheet.columns:
+        max_length = 0
+        column_letter = openpyxl.utils.get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        sheet.column_dimensions[column_letter].width = adjusted_width
+
+    # Salva o workbook e prepara a resposta
+    workbook.save(output)
+    output.seek(0)
+    
+    return Response(output,
+                   mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                   headers={"Content-Disposition": "attachment;filename=Relatorio_Patrimonios.xlsx"})
+
 @app.route('/patrimonio/delete/<int:cliente_id>', methods=['POST'])
 @login_required
 @role_required(['super_admin', 'admin_patrimonio'])
@@ -1090,6 +1183,66 @@ def cobranca_dashboard():
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
     return render_template('cobranca/cobranca_dashboard.html', fichas_acerto=items, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
+@app.route('/cobranca/export_excel')
+@login_required
+@role_required(['super_admin', 'admin_cobranca'])
+def cobranca_export_excel():
+    db = get_db()
+    query = "SELECT f.ficha_acerto, f.caixa, f.range_cliente_inicio, f.range_cliente_fim, s.name as store_name FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id"
+    params = []
+    if session['role'] != 'super_admin':
+        query += " WHERE f.store_id = ?"
+        params.append(session.get('store_id'))
+    
+    query += " ORDER BY CAST(f.caixa as INTEGER) ASC, f.range_cliente_inicio ASC"
+    items = db.execute(query, params).fetchall()
+    
+    output = io.BytesIO()
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Fichas de Acerto"
+
+    cabecalho = ['Empresa', 'Ficha de Acerto', 'Caixa', 'Range Cliente Início', 'Range Cliente Fim']
+    sheet.append(cabecalho)
+    
+    # Estilos do cabeçalho
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+
+    for item in items:
+        sheet.append([
+            item['store_name'] or 'N/A',
+            item['ficha_acerto'], 
+            item['caixa'], 
+            item['range_cliente_inicio'], 
+            item['range_cliente_fim']
+        ])
+    
+    # Adicionar Tabela Estilizada
+    tabela = Table(displayName="TabelaCobranca", ref=f"A1:{openpyxl.utils.get_column_letter(sheet.max_column)}{sheet.max_row}")
+    estilo = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False, showLastColumn=False, showRowStripes=True, showColumnStripes=False)
+    tabela.tableStyleInfo = estilo
+    sheet.add_table(tabela)
+
+    for col in sheet.columns:
+        max_length = 0
+        column = openpyxl.utils.get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        sheet.column_dimensions[column].width = adjusted_width
+        
+    workbook.save(output)
+    output.seek(0)
+    
+    return Response(output, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition":"attachment;filename=cobranca_fichas_acerto.xlsx"})
 
 @app.route('/cobranca/fichas_acerto/delete/<int:item_id>', methods=['POST'])
 @login_required
@@ -1132,30 +1285,6 @@ def cobranca_fichas_acerto_edit(item_id):
             flash('Os campos de range de cliente devem ser números.', 'danger')
         return redirect(url_for('cobranca_dashboard'))
     return render_template('cobranca/cobranca_fichas_acerto_edit.html', item=item)
-
-
-@app.route('/cobranca/export_csv')
-@login_required
-@role_required(['super_admin', 'admin_cobranca'])
-def cobranca_export_csv():
-    db = get_db()
-    query = "SELECT f.id, f.ficha_acerto, f.caixa, f.range_cliente_inicio, f.range_cliente_fim, s.name as store_name FROM cobranca_fichas_acerto f LEFT JOIN stores s ON f.store_id = s.id"
-    params = []
-    if session['role'] != 'super_admin':
-        query += " WHERE f.store_id = ?"
-        params.append(session.get('store_id'))
-    
-    items = db.execute(query + " ORDER BY CAST(f.caixa as INTEGER) ASC, f.range_cliente_inicio ASC", params).fetchall()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    writer.writerow(['ID', 'Ficha de Acerto', 'Caixa', 'Range Cliente Início', 'Range Cliente Fim', 'Empresa'])
-    for item in items:
-        writer.writerow([item['id'], item['ficha_acerto'], item['caixa'], item['range_cliente_inicio'], item['range_cliente_fim'], item['store_name']])
-    
-    output.seek(0)
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=cobranca_fichas_acerto.csv"})
-
 
 # --- Rotas Contas a Pagar (Documentos Diversos) ---
 @app.route('/contas_a_pagar/documentos_diversos', methods=['GET', 'POST'])
@@ -1222,6 +1351,87 @@ def documentos_diversos_dashboard():
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
     return render_template('contas_a_pagar/documentos_diversos_dashboard.html', documentos_diversos=items, stores=stores, page=page, total_pages=total_pages, search=search_query)
 
+@app.route('/contas_a_pagar/pagamentos/export_excel')
+@login_required
+@role_required(['super_admin', 'admin_contas_a_pagar'])
+def contas_a_pagar_pagamentos_export_excel():
+    db = get_db()
+    query = "SELECT p.pagamento_data_inicio, p.pagamento_data_fim, p.caixa, s.name as store_name FROM contas_a_pagar_pagamentos p LEFT JOIN stores s ON p.store_id = s.id"
+    params = []
+    if session['role'] != 'super_admin':
+        query += " WHERE p.store_id = ?"
+        params.append(session.get('store_id'))
+    
+    items = db.execute(query + " ORDER BY p.id DESC", params).fetchall()
+
+    output = io.BytesIO()
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Pagamentos"
+    cabecalho = ['Empresa', 'Data Início', 'Data Fim', 'Caixa']
+    sheet.append(cabecalho)
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+
+    for item in items:
+        sheet.append([item['store_name'] or 'N/A', item['pagamento_data_inicio'], item['pagamento_data_fim'], item['caixa']])
+
+    tabela = Table(displayName="TabelaPagamentos", ref=f"A1:{openpyxl.utils.get_column_letter(sheet.max_column)}{sheet.max_row}")
+    estilo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+    tabela.tableStyleInfo = estilo
+    sheet.add_table(tabela)
+
+    for col in sheet.columns:
+        sheet.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = 20
+
+    workbook.save(output)
+    output.seek(0)
+    return Response(output, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition":"attachment;filename=contas_a_pagar_pagamentos.xlsx"})
+
+@app.route('/contas_a_pagar/documentos_diversos/export_excel')
+@login_required
+@role_required(['super_admin', 'admin_contas_a_pagar'])
+def contas_a_pagar_diversos_export_excel():
+    db = get_db()
+    query = "SELECT d.numero_caixa, s.name as store_name FROM contas_a_pagar_diversos d LEFT JOIN stores s ON d.store_id = s.id"
+    params = []
+    if session['role'] != 'super_admin':
+        query += " WHERE d.store_id = ?"
+        params.append(session.get('store_id'))
+
+    items = db.execute(query + " ORDER BY d.id DESC", params).fetchall()
+    
+    output = io.BytesIO()
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Documentos Diversos"
+    cabecalho = ['Empresa', 'Número da Caixa']
+    sheet.append(cabecalho)
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+    for cell in sheet[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+
+    for item in items:
+        sheet.append([item['store_name'] or 'N/A', item['numero_caixa']])
+
+    tabela = Table(displayName="TabelaDocumentos", ref=f"A1:{openpyxl.utils.get_column_letter(sheet.max_column)}{sheet.max_row}")
+    estilo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+    tabela.tableStyleInfo = estilo
+    sheet.add_table(tabela)
+
+    for col in sheet.columns:
+        sheet.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = 30
+
+    workbook.save(output)
+    output.seek(0)
+    return Response(output, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition":"attachment;filename=contas_a_pagar_documentos_diversos.xlsx"})
 
 @app.route('/contas_a_pagar/documentos_diversos/delete/<int:item_id>', methods=['POST'])
 @login_required

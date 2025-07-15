@@ -228,18 +228,37 @@ table tbody tr:hover {
 }
 
 .export-button {
-    background: var(--success-color);
-    color: white;
+    display: inline-flex; /* Alinha o ícone e o texto corretamente */
+    align-items: center;
+    gap: 8px; /* Espaço entre o ícone e o texto */
     padding: 10px 20px;
+    border: none;
     border-radius: var(--border-radius);
+    background: linear-gradient(45deg, #1c6e46, #27ae60); /* Gradiente de verde profissional */
+    color: white;
     text-decoration: none;
-    font-weight: 500;
-    transition: background-color var(--transition-speed), transform var(--transition-speed);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
+
 .export-button:hover {
-    background: #27ae60;
-    transform: translateY(-2px);
+    transform: translateY(-3px); /* Efeito de elevação ao passar o rato */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(45deg, #27ae60, #2ecc71); /* O gradiente fica mais claro */
 }
+
+.export-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.export-button .fas {
+    font-size: 1.1em; /* Ajusta o tamanho do ícone para se destacar um pouco mais */
+}
+
 
 /* --- Mensagens Flash --- */
 .messages-wrapper {

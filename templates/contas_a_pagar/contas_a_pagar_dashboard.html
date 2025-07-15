@@ -52,6 +52,11 @@
     </div>
 
     <h2><i class="fas fa-list-ul"></i> Pagamentos Existentes</h2>
+    <div class="dashboard-actions" style="text-align: right; margin-bottom: 15px;">
+    <a href="{{ url_for('contas_a_pagar_pagamentos_export_excel') }}" class="export-button">
+        <i class="fas fa-file-excel"></i> Exportar para Excel
+    </a>
+</div>
     <div class="table-wrapper">
         {% if pagamentos %}
             <table>
