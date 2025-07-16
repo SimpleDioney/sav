@@ -83,7 +83,19 @@ body {
 .logo-text { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
 [data-theme="dark"] .logo-text { color: #fff; }
 
-.sidebar-nav { flex-grow: 1; overflow-y: auto; }
+.sidebar-nav { 
+    flex-grow: 1; 
+    overflow-y: auto; /* Reativa a rolagem */
+
+    /* Esconde a barra de rolagem para Chrome, Safari e Edge */
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Esconde a barra de rolagem para navegadores baseados em WebKit (Chrome, Safari) */
+.sidebar-nav::-webkit-scrollbar {
+    display: none;
+}
 .nav-menu { list-style: none; }
 .nav-category {
     padding: 25px 20px 10px;
@@ -558,3 +570,4 @@ body.sidebar-is-active .mobile-menu-toggle {
     /* Move o botão para trás da sidebar, escondendo-o efetivamente */
     z-index: 999; 
 }
+
