@@ -64,10 +64,10 @@
                     {% for item in fichas_acerto %}
                         <tr data-id="{{ item.id }}">
                             {% if session.role == 'super_admin' %}<td>{{ item.store_name or 'N/A' }}</td>{% endif %}
-                            <td>{{ item.ficha_acerto }}</td>
-                            <td>{{ item.caixa }}</td>
-                            <td>{{ item.range_cliente_inicio }} - {{ item.range_cliente_fim }}</td>
-                            <td class="actions">
+                            <td data-label="Ficha acerto">{{ item.ficha_acerto }}</td>
+                            <td data-label="Caixa">{{ item.caixa }}</td>
+                            <td data-label="Range">{{ item.range_cliente_inicio }} - {{ item.range_cliente_fim }}</td>
+                            <td data-label="Ações" class="actions">
                                 <a href="{{ url_for('cobranca_fichas_acerto_edit', item_id=item.id) }}" class="edit" title="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('cobranca_fichas_acerto_delete', item_id=item.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta ficha?');">
                                     <button type="submit" class="delete" title="Excluir"><i class="fas fa-trash-alt"></i></button>

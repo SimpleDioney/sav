@@ -1,5 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
+    const menuToggleBtn = document.getElementById('mobile-menu-toggle-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const body = document.body; // Pega o body
+
+    if (menuToggleBtn && sidebar) {
+        menuToggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            body.classList.toggle('sidebar-is-active'); // ADICIONA/REMOVE A CLASSE NO BODY
+        });
+
+        // Opcional: Fechar o menu ao clicar fora dele
+        document.addEventListener('click', function(event) {
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isClickOnToggleBtn = menuToggleBtn.contains(event.target);
+
+            if (!isClickInsideSidebar && !isClickOnToggleBtn && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                body.classList.remove('sidebar-is-active'); // REMOVE A CLASSE DO BODY AQUI TAMBÉM
+            }
+        });
+    }
     const patrimonioForm = document.getElementById('patrimonio-form');
     if (patrimonioForm) {
         const codigoClienteInput = document.getElementById('codigo_cliente');

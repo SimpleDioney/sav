@@ -121,6 +121,10 @@
 
         <div class="main-content {% if not session.logged_in %}full-width{% endif %}">
             <header class="main-header">
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle-btn">
+                    <i class="fas fa-bars icon-menu"></i>
+                    <i class="fas fa-times icon-close"></i>
+                </button>
                 <div class="header-left">
                     <h2>{% block page_title %}{% endblock %}</h2>
                 </div>
@@ -194,6 +198,9 @@
             }
         });
     </script>
+
+        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
      {% block scripts %}{% endblock %}
 </body>
 </html>
