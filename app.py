@@ -28,8 +28,35 @@ try:
 except Exception as e:
     print(f"ERRO: Não foi possível inicializar o Firebase. Erro: {e}")
 
+
+
 # --- CONFIGURAÇÃO DA APLICAÇÃO ---
 app = Flask(__name__)
+
+@app.before_request
+def check_for_maintenance():
+    # Ignora a verificação para as rotas estáticas (CSS, JS) e para a própria página de manutenção
+    # Isso previne um loop infinito de redirecionamento.
+    if request.endpoint and request.endpoint not in ['static', 'maintenance']:
+        try:
+            # Pega a referência do nosso "interruptor" no Firebase
+            maintenance_ref = db.reference('config/is_maintenance_mode')
+            is_maintenance = maintenance_ref.get()
+
+            # Se o valor for True, exibe a página de manutenção
+            if is_maintenance:
+                return render_template('maintenance.html'), 503 # HTTP 503: Serviço Indisponível
+        except Exception as e:
+            # Se der erro ao conectar com o Firebase, o site continua funcionando por segurança.
+            # É bom registrar esse erro para depuração.
+            print(f"AVISO: Não foi possível verificar o modo de manutenção no Firebase. O site continuará online. Erro: {e}")
+
+# Rota necessária para que o `render_template` funcione dentro do `check_for_maintenance`
+@app.route('/maintenance')
+def maintenance():
+    return render_template('maintenance.html'), 503
+# --- FIM DO VERIFICADOR ---
+
 # Chave secreta segura para garantir que as sessões não possam ser adulteradas
 app.secret_key = os.urandom(24) 
 # Define um nome único para o cookie de sessão para evitar conflitos
