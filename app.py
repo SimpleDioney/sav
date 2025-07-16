@@ -3,7 +3,7 @@ import sqlite3
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import init_app, get_db
-from datetime import datetime
+import datetime
 import json
 import io
 import os
@@ -13,69 +13,56 @@ from openpyxl.styles import Font, PatternFill
 import firebase_admin
 from firebase_admin import credentials, db
 
+# --- INICIALIZAÇÃO FIREBASE (sem alterações) ---
 try:
-
     base_dir = os.path.dirname(os.path.abspath(__file__))
     credentials_path = os.path.join(base_dir, 'firebase-credentials.json')
-
-    
     if not os.path.exists(credentials_path):
         raise FileNotFoundError(f"O arquivo de credenciais não foi encontrado em: {credentials_path}")
-
-    cred = credentials.Certificate(credentials_path)
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://desativar-site-default-rtdb.firebaseio.com/'
-    })
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(credentials_path)
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://desativar-site-default-rtdb.firebaseio.com/'
+        })
     print("Firebase inicializado com sucesso.")
 except Exception as e:
-    print(f"ERRO: Não foi possível inicializar o Firebase. Verifique o arquivo 'firebase-credentials.json' e a URL. Erro: {e}")
+    print(f"ERRO: Não foi possível inicializar o Firebase. Erro: {e}")
 
+# --- CONFIGURAÇÃO DA APLICAÇÃO ---
 app = Flask(__name__)
+# Chave secreta segura para garantir que as sessões não possam ser adulteradas
+app.secret_key = os.urandom(24) 
+# Define um nome único para o cookie de sessão para evitar conflitos
+app.config['SESSION_COOKIE_NAME'] = 'sav_gestor_session'
+# Define a sessão como permanente
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(hours=8)
 
-app.config['APPLICATION_ROOT'] = os.environ.get('APP_PREFIX', '')
-
-app.secret_key = '09164Duque!Paprika'
 PER_PAGE = 20  
-
 app.jinja_env.add_extension('jinja2.ext.do')
 
+# --- LOGS DE DEPURACÃO ---
 @app.before_request
-def check_for_maintenance():
-    
-    
-    if request.endpoint and request.endpoint not in ['static', 'maintenance']:
-        try:
-            
-            maintenance_ref = db.reference('config/is_maintenance_mode')
-            is_maintenance = maintenance_ref.get()
-
-            
-            if is_maintenance:
-                return render_template('maintenance.html'), 503 
-        except Exception as e:
-            
-            
-            print(f"AVISO: Não foi possível verificar o modo de manutenção no Firebase. O site continuará online. Erro: {e}")
+def log_request_info():
+    """Loga cada requisição recebida pelo servidor."""
+    print(f"\n>>> REQUISIÇÃO RECEBIDA: {request.method} {request.path}")
+    # Verifica se o cookie de sessão está sendo enviado pelo navegador
+    print(f">>> Cabeçalho 'Cookie': {request.headers.get('Cookie')}") 
+    # Mostra o estado da sessão no início da requisição
+    print(f">>> Sessão no início da requisição: {dict(session)}")
 
 
-@app.route('/maintenance')
-def maintenance():
-    return render_template('maintenance.html'), 503
-
-
-
-@app.template_filter('datetime')
-def format_datetime(value, fmt='%d/%m/%Y %H:%M:%S'):
-    """Formata uma string de data/hora para o formato brasileiro."""
-    if value is None:
-        return ""
-    try:
-        return datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f').strftime(fmt)
-    except ValueError:
-        try:
-            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime(fmt)
-        except ValueError:
-            return value
+def login_required(f):
+    """Garante que o usuário esteja logado para acessar a rota."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        print(f"--- Verificando @login_required para a rota: '{request.endpoint}'")
+        if 'logged_in' not in session:
+            print(f"--- FALHA em @login_required. Sessão atual: {dict(session)}")
+            flash('Você precisa fazer login para acessar esta página.', 'danger')
+            return redirect(url_for('admin_login'))
+        print(f"--- SUCESSO em @login_required. Usuário '{session.get('username')}' está logado.")
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.template_filter('prettyjson')
 def pretty_json_filter(value):
@@ -84,10 +71,10 @@ def pretty_json_filter(value):
         return 'N/A'
     try:
         data = json.loads(value)
-        
+        # Formata como uma lista de chave-valor
         html = "<ul>"
         for key, val in data.items():
-            if key != 'password': 
+            if key != 'password': # Não exibir senhas
                 html += f"<li><strong>{key.replace('_', ' ').title()}:</strong> {val}</li>"
         html += "</ul>"
         return html
@@ -95,10 +82,48 @@ def pretty_json_filter(value):
         return value
 
 
-init_app(app)
+# --- ROTA DE LOGIN (MODIFICADA) ---
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        user = db.execute("SELECT u.*, s.name as store_name FROM users u LEFT JOIN stores s ON u.store_id = s.id WHERE u.username = ?", (username,)).fetchone()
+        
+        if user and check_password_hash(user['password'], password):
+            session.clear()
+            session['logged_in'] = True
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['role'] = user['role']
+            session['store_id'] = user['store_id']
+            session['store_name'] = user['store_name']
+            # Garante que a sessão seja tratada como permanente
+            session.permanent = True 
+            
+            print(f"--- SESSÃO CRIADA no login para '{username}': {dict(session)}")
+            flash(f'Login bem-sucedido! Bem-vindo, {user["username"]}.', 'success')
 
-
-
+            role_map = {
+                'super_admin': 'super_admin_dashboard',
+                'admin_patrimonio': 'patrimonio_dashboard',
+                'admin_rh': 'rh_dashboard',
+                'admin_contas_a_pagar': 'contas_a_pagar_dashboard',
+                'admin_cobranca': 'cobranca_dashboard'
+            }
+            dashboard_route = role_map.get(user['role'], 'index')
+            print(f"--- REDIRECIONANDO para '{dashboard_route}'")
+            return redirect(url_for(dashboard_route))
+        else:
+            flash('Usuário ou senha inválidos.', 'danger')
+            
+    return render_template('admin_login.html')
+    
+#
+# --- COLE O RESTANTE DO SEU CÓDIGO app.py AQUI ---
+# (todas as outras rotas: /dashboard, /search, /super_admin/dashboard, etc.)
+#
 def is_ajax_request():
     """Verifica se a requisição é do tipo AJAX."""
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -114,20 +139,22 @@ def log_action(action, target_type=None, target_id=None, target_name=None, dados
     )
     db.commit()
 
+def format_datetime(value, fmt='%d/%m/%Y %H:%M:%S'):
+    """Formata uma string de data/hora para o formato brasileiro."""
+    if value is None:
+        return ""
+    try:
+        # A correção está aqui: usamos datetime.datetime.strptime
+        return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f').strftime(fmt)
+    except ValueError:
+        try:
+            # E aqui também
+            return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime(fmt)
+        except ValueError:
+            return value
 
-
-def login_required(f):
-    """Garante que o usuário esteja logado para acessar a rota."""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'logged_in' not in session:
-            if is_ajax_request():
-                return jsonify({'status': 'error', 'message': 'Sessão expirada. Faça login novamente.'}), 401
-            flash('Você precisa fazer login para acessar esta página.', 'danger')
-            return redirect(url_for('admin_login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
+# E adicione esta linha para registrar o filtro explicitamente
+app.jinja_env.filters['datetime'] = format_datetime
 
 def role_required(allowed_roles):
     """Garante que o usuário tenha uma das funções permitidas."""
@@ -256,33 +283,6 @@ def search():
                            page=page,
                            total_pages=total_pages)
 
-
-
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        db = get_db()
-        user = db.execute("SELECT u.*, s.name as store_name FROM users u LEFT JOIN stores s ON u.store_id = s.id WHERE u.username = ?", (username,)).fetchone()
-        
-        if user and check_password_hash(user['password'], password):
-            session.clear()
-            session['logged_in'] = True
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            session['role'] = user['role']
-            session['store_id'] = user['store_id']
-            session['store_name'] = user['store_name']
-            log_action('fez_login')
-            flash(f'Login bem-sucedido! Bem-vindo, {user["username"]}.', 'success')
-            return redirect(url_for('admin_dashboard'))
-        else:
-            log_action('erro_no_login', target_name=username)
-            flash('Usuário ou senha inválidos.', 'danger')
-    return render_template('admin_login.html')
-
-
 @app.route('/admin/logout')
 def admin_logout():
     
@@ -303,7 +303,7 @@ def admin_logout():
     
     
     
-    response.set_cookie('session', '', expires=0)
+    response.set_cookie(app.config['SESSION_COOKIE_NAME'], '', expires=0)
     
     
     return response
@@ -1076,8 +1076,9 @@ def contas_a_pagar_dashboard():
         if is_ajax_request():
             new_item = db.execute("SELECT p.*, s.name as store_name FROM contas_a_pagar_pagamentos p LEFT JOIN stores s ON p.store_id = s.id WHERE p.id = ?", (new_id,)).fetchone()
             item_dict = dict(new_item)
-            item_dict['pagamento_data_inicio'] = datetime.strptime(item_dict['pagamento_data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
-            item_dict['pagamento_data_fim'] = datetime.strptime(item_dict['pagamento_data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
+            # --- CORREÇÃO AQUI ---
+            item_dict['pagamento_data_inicio'] = datetime.datetime.strptime(item_dict['pagamento_data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
+            item_dict['pagamento_data_fim'] = datetime.datetime.strptime(item_dict['pagamento_data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
             return jsonify({'status': 'success', 'message': 'Pagamento adicionado!', 'item': item_dict, 'page_type': 'contas_a_pagar_pagamentos'})
         flash('Pagamento adicionado com sucesso!', 'success')
         return redirect(url_for('contas_a_pagar_dashboard'))
@@ -1112,8 +1113,9 @@ def contas_a_pagar_dashboard():
     for item in items:
         item_dict = dict(item)
         try:
-            item_dict['pagamento_data_inicio'] = datetime.strptime(item_dict['pagamento_data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
-            item_dict['pagamento_data_fim'] = datetime.strptime(item_dict['pagamento_data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
+            # --- CORREÇÃO AQUI ---
+            item_dict['pagamento_data_inicio'] = datetime.datetime.strptime(item_dict['pagamento_data_inicio'], '%Y-%m-%d').strftime('%d/%m/%Y')
+            item_dict['pagamento_data_fim'] = datetime.datetime.strptime(item_dict['pagamento_data_fim'], '%Y-%m-%d').strftime('%d/%m/%Y')
         except (ValueError, TypeError): pass
         items_formatted.append(item_dict)
 
@@ -1127,7 +1129,6 @@ def contas_a_pagar_dashboard():
 
     stores = db.execute("SELECT id, name FROM stores ORDER BY name").fetchall() if session['role'] == 'super_admin' else []
     return render_template('contas_a_pagar/contas_a_pagar_dashboard.html', pagamentos=items_formatted, stores=stores, page=page, total_pages=total_pages, search=search_query)
-
 
 @app.route('/contas_a_pagar/pagamentos/delete/<int:item_id>', methods=['POST'])
 @login_required
@@ -1530,3 +1531,6 @@ def contas_a_pagar_diversos_edit(item_id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000, debug=True)
+
+# Inicializa o app com o banco de dados
+init_app(app)

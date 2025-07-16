@@ -2,17 +2,17 @@
 
 {% block title %}Login Administrativo{% endblock %}
 
+{% block page_title %}Login Administrativo{% endblock %}
+
 {% block content %}
-<div class="dashboard-actions" style="margin-bottom: 20px;">
+<div class="card" style="max-width: 500px; margin: 40px auto;">
+    <div class="dashboard-actions" style="margin-bottom: 20px;">
         <a href="{{ url_for('index') }}" class="button-secondary">
-            <i class="fas fa-arrow-left"></i> Voltar ao Painel
+            <i class="fas fa-arrow-left"></i> Voltar à Pesquisa
         </a>
     </div>
-<div class="card" style="max-width: 500px; margin: 40px auto;">
     <h2><i class="fas fa-lock"></i> Login Administrativo</h2>
     <div class="form-section">
-        
-
         <form action="{{ url_for('admin_login') }}" method="POST">
             <label for="username">Usuário:</label>
             <input type="text" id="username" name="username" required>
