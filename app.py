@@ -167,18 +167,26 @@ def log_action(action, target_type=None, target_id=None, target_name=None, dados
     db.commit()
 
 def format_datetime(value, fmt='%d/%m/%Y %H:%M:%S'):
-    """Formata uma string de data/hora para o formato brasileiro."""
+    """Formata uma string de data/hora UTC para o fuso horário local (UTC-3) e para o formato brasileiro."""
     if value is None:
         return ""
+    
+    # Tenta converter a string do banco de dados para um objeto datetime
     try:
-        # A correção está aqui: usamos datetime.datetime.strptime
-        return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f').strftime(fmt)
+        utc_time = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
         try:
-            # E aqui também
-            return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime(fmt)
+            utc_time = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
         except ValueError:
+            # Se não conseguir converter, retorna o valor original
             return value
+            
+    # --- CORREÇÃO DO FUSO HORÁRIO ---
+    # Subtrai 3 horas para ajustar de UTC para o horário de Brasília (America/Sao_Paulo)
+    local_time = utc_time - datetime.timedelta(hours=3)
+    
+    # Formata a data e hora já ajustadas
+    return local_time.strftime(fmt)
 
 # E adicione esta linha para registrar o filtro explicitamente
 app.jinja_env.filters['datetime'] = format_datetime
